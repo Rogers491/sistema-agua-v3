@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Inteligente de Água Mineral</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f2fe; /* Tailwind sky-100 */
+        }
+        .tab-button.active {
+            border-color: #0284c7; /* Tailwind sky-600 */
+            color: #0284c7;
+            font-weight: 600;
+            background-color: #f0f9ff; /* Tailwind sky-50 */
+        }
+        .tab-button {
+            transition: all 0.3s ease-in-out;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            -webkit-overflow-scrolling: touch;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 24px;
+            border: 1px solid #d1d5db; /* Tailwind gray-300 */
+            width: 90%;
+            max-width: 600px;
+            border-radius: 0.5rem; /* Tailwind rounded-lg */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Tailwind shadow-xl */
+        }
+        .close-button {
+            color: #9ca3af; /* Tailwind gray-400 */
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.2s ease;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #1f2937; /* Tailwind gray-800 */
+            text-decoration: none;
+            cursor: pointer;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0f9ff; /* Tailwind sky-50 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #7dd3fc; /* Tailwind sky-300 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8; /* Tailwind sky-400 */
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); /* shadow-md */
+            padding: 1.5rem; /* p-6 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem; /* py-2 px-4 */
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 500; /* font-medium */
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #0ea5e9; /* Tailwind sky-500 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0284c7; /* Tailwind sky-600 */
+        }
+        .btn-secondary {
+            background-color: #10b981; /* Tailwind emerald-500 */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #059669; /* Tailwind emerald-600 */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Tailwind red-500 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Tailwind red-600 */
+        }
+        .btn-warning {
+            background-color: #f59e0b; /* Tailwind amber-500 */
+            color: white;
+        }
+        .btn-warning:hover {
+            background-color: #d97706; /* Tailwind amber-600 */
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem; /* py-1 px-2 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .form-input {
+            margin-top: 0.25rem;
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: #0ea5e9; /* sky-500 */
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25); /* ring-sky-500 */
+        }
+        .icon {
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+            margin-right: 0.5rem; /* mr-2 */
+        }
+        .status-blue { background-color: #bae6fd; color: #075985; } 
+        .status-yellow { background-color: #fef3c7; color: #b45309; }
+        .status-red { background-color: #fee2e2; color: #991b1b; }
+
+        #simple-whatsapp-container {
+            position: sticky;
+            top: 20px; 
+            z-index: 10;
+        }
+        @media (max-width: 768px) { 
+            #simple-whatsapp-container {
+                position: relative; 
+                top: auto;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="p-2 md:p-6">
+    <div class="container mx-auto max-w-7xl bg-white shadow-xl rounded-lg p-4 md:p-6">
+        <header class="mb-6 md:mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-sky-600">Gestão Inteligente de Água Mineral</h1>
+            <p class="text-gray-600 mt-1">Otimizando seu atendimento e controle de pedidos.</p>
+        </header>
+
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-1 md:space-x-4 overflow-x-auto pb-1" aria-label="Tabs">
+                <button onclick="app.changeTab('clientes')" class="tab-button active whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
+                    Clientes e Pedidos
+                </button>
+                <button onclick="app.changeTab('todos_clientes')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
+                    Todos os Clientes
+                </button>
+                <button onclick="app.changeTab('importar')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
+                    Importar Clientes
+                </button>
+                <button onclick="app.changeTab('inativos')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
+                    Painel de Inativos
+                </button>
+                <button onclick="app.changeTab('relatorios')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
+                    Relatórios
+                </button>
+            </nav>
+        </div>
+
+        <main id="app-content">
+            <section id="clientes-tab" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 space-y-6">
+                    <div class="card">
+                        <h2 class="text-xl font-semibold text-sky-700 mb-4">Buscar Cliente</h2>
+                        <label for="search-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone (busca automática):</label>
+                        <div class="flex space-x-2 items-center">
+                            <input type="tel" id="search-phone" class="form-input flex-grow" placeholder="(XX) XXXXX-XXXX">
+                            <button onclick="app.openLocatorModal()" class="btn btn-primary">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                                Localizador
+                            </button>
+                        </div>
+                        <div id="new-client-button-container" class="mt-4 hidden">
+                             <button onclick="app.showNewClientFormFromButton()" class="btn btn-warning w-full">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>
+                                Cadastrar Novo Cliente
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="client-and-order-section" class="hidden space-y-6">
+                        <div class="card">
+                            <h3 class="text-xl font-semibold text-sky-700 mb-3">Dados do Cliente</h3>
+                            <p><strong>Nome:</strong> <span id="client-name-display" class="text-gray-800"></span></p>
+                            <p><strong>Endereço:</strong> <span id="client-address-display" class="text-gray-800"></span></p>
+                            <p><strong>Telefone:</strong> <span id="client-phone-display" class="text-gray-800"></span></p>
+                            <input type="hidden" id="current-client-id">
+
+                            <div id="last-orders-summary" class="mt-4 pt-3 border-t border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-600 mb-2">Últimos Pedidos:</h4>
+                                <div id="last-orders-list" class="text-sm text-gray-700 space-y-1">
+                                    <p class="text-gray-500">Nenhum pedido anterior registrado.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="text-xl font-semibold text-sky-700 mb-3">Novo Pedido</h3>
+                            <div id="order-items-container" class="space-y-3">
+                                </div>
+                            <button onclick="app.addOrderItem()" class="btn btn-secondary mt-3 text-sm">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                Adicionar Item
+                            </button>
+                            
+                            <div class="mt-4">
+                                <label for="payment-method" class="block text-sm font-medium text-gray-700">Forma de Pagamento:</label>
+                                <select id="payment-method" class="form-input mt-1">
+                                    <option value="">Selecione...</option>
+                                    <option value="Pix">Pix</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                    <option value="Cartão de Débito">Cartão de Débito</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                </select>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-gray-200">
+                                <p class="text-lg font-semibold text-gray-800">Total do Pedido: R$ <span id="order-total" class="text-emerald-600">0.00</span></p>
+                            </div>
+
+                            <div class="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                <button onclick="app.finalizeOrder()" class="btn btn-primary flex-grow">
+                                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                    Finalizar Pedido
+                                </button>
+                                <button onclick="app.generateWhatsAppMessage(false)" class="btn btn-secondary flex-grow">
+                                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                    Gerar Mensagem Completa
+                                </button>
+                            </div>
+                            <textarea id="whatsapp-message-complete" rows="3" class="form-input hidden mt-3" readonly placeholder="Mensagem completa para WhatsApp..."></textarea>
+                        </div>
+                    </div>
+
+                    <div id="new-client-form-section" class="card hidden">
+                        <h3 class="text-xl font-semibold text-amber-700 mb-3">Cadastrar Novo Cliente</h3>
+                        <div>
+                            <label for="new-client-name" class="block text-sm font-medium text-gray-700">Nome:</label>
+                            <input type="text" id="new-client-name" class="form-input">
+                        </div>
+                        <div class="mt-3">
+                            <label for="new-client-address" class="block text-sm font-medium text-gray-700">Endereço:</label>
+                            <input type="text" id="new-client-address" class="form-input">
+                        </div>
+                        <div class="mt-3">
+                            <label for="new-client-phone" class="block text-sm font-medium text-gray-700">Telefone:</label>
+                            <input type="tel" id="new-client-phone" class="form-input" placeholder="(XX) XXXXX-XXXX">
+                        </div>
+                        <button onclick="app.saveNewClientAndProceedToOrder()" class="btn btn-warning mt-4 w-full">
+                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Salvar e Continuar Pedido
+                        </button>
+                    </div>
+                </div>
+
+                <div class="md:col-span-1">
+                    <div id="simple-whatsapp-container" class="card hidden">
+                        <h3 class="text-lg font-semibold text-sky-700 mb-2">Mensagem Rápida (WhatsApp)</h3>
+                        <textarea id="whatsapp-message-simple" rows="4" class="form-input" readonly placeholder="Detalhes para cópia rápida..."></textarea>
+                        <button onclick="app.copySimpleWhatsAppMessage()" class="btn btn-primary mt-2 w-full text-sm">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 4.625v2.625m0 0H19.5m-2.25-2.625h-1.5m1.5 0l-1.5-1.5m1.5 1.5l1.5 1.5" /></svg>
+                            Copiar Mensagem Rápida
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="todos_clientes-tab" class="hidden card">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">Todos os Clientes Cadastrados</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Cadastro</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endereço</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
+                                </tr>
+                        </thead>
+                        <tbody id="all-clients-list" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="importar-tab" class="hidden card">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">Importar Clientes via Excel</h2>
+                <p class="text-sm text-gray-600 mb-1">Selecione um arquivo Excel (.xlsx ou .xls).</p>
+                <p class="text-xs text-gray-500 mb-3">Colunas esperadas: <strong>Name</strong> (Nome + Endereço) e <strong>Mobile Phone</strong> (Telefone).</p>
+                <input type="file" id="excel-file-input" accept=".xlsx,.xls" class="form-input file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                <button onclick="app.importClientsFromExcel()" class="btn btn-primary mt-4">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338 0 4.5 4.5 0 01-1.41 8.775H6.75z" /></svg>
+                    Importar Arquivo
+                </button>
+                <div id="import-status" class="mt-3 text-sm text-gray-700"></div>
+            </section>
+
+            <section id="inativos-tab" class="hidden card">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">Painel de Clientes Inativos</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Pedido</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dias Sem Comprar</th>
+                                </tr>
+                        </thead>
+                        <tbody id="inactive-clients-list" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="relatorios-tab" class="hidden card">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">Relatório Mensal de Vendas</h2>
+                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+                    <label for="report-month" class="text-sm font-medium text-gray-700">Mês/Ano:</label>
+                    <input type="month" id="report-month" class="form-input sm:w-auto" value="">
+                    <button onclick="app.generateSalesReport()" class="btn btn-primary">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 19.875v-6.75zM3 8.625c0-.621.504-1.125 1.125-1.125h15.75c.621 0 1.125.504 1.125 1.125v0c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 8.625v0zM3.75 7.5A2.25 2.25 0 016 5.25h12A2.25 2.25 0 0120.25 7.5v0A2.25 2.25 0 0118 9.75H6A2.25 2.25 0 013.75 7.5v0z" /></svg>
+                        Gerar Relatório
+                    </button>
+                </div>
+                <div id="sales-report-summary" class="mb-4 p-3 border border-gray-200 rounded bg-sky-50">
+                     <p class="text-gray-500">Selecione o mês e clique em "Gerar Relatório".</p>
+                </div>
+                <div class="mb-4">
+                    <canvas id="sales-chart" height="150"></canvas>
+                </div>
+                <button onclick="app.exportSalesReportToExcel()" id="export-excel-button" class="btn btn-secondary hidden">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    Exportar para Excel
+                </button>
+            </section>
+        </main>
+
+        <div id="notification-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="app.closeModal('notification-modal')">&times;</span>
+                <p id="notification-message" class="text-gray-700"></p>
+            </div>
+        </div>
+
+        <div id="locator-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="app.closeModal('locator-modal')">&times;</span>
+                <h3 class="text-xl font-semibold text-sky-700 mb-4">Localizador de Clientes</h3>
+                <input type="text" id="locator-search-term" class="form-input mb-3" placeholder="Buscar por nome, endereço ou telefone...">
+                <button onclick="app.searchClientsUniversal()" class="btn btn-primary w-full mb-4">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                    Buscar
+                </button>
+                <div id="locator-results" class="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2 bg-gray-50">
+                    <p class="text-gray-500">Nenhum resultado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Carregado. Iniciando script principal...");
+
+            // Configurações do Supabase - SUBSTITUA PELAS SUAS CHAVES REAIS EM PRODUÇÃO
+            const SUPABASE_URL = 'https://mnplhyjktwbubjnhtfdy.supabase.co'; 
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucGxoeWprdHdidWJqbmh0ZmR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0MzA2OTQsImV4cCI6MjA2MzAwNjY5NH0.Uij6rK7344-w9ECgvi2ICtz--zWBtGF5wUwlckSY17w'; 
+            
+            let supabaseInstance = null;
+
+            // Verifica se a biblioteca Supabase está carregada e inicializa o cliente
+            if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                try {
+                    supabaseInstance = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log("Cliente Supabase inicializado com sucesso.");
+                } catch (e) {
+                    console.error("Erro ao inicializar o cliente Supabase:", e);
+                    // Tenta usar o notificador do app se já estiver definido, senão usa alert
+                    if (window.app && typeof window.app.showNotification === 'function') {
+                        window.app.showNotification("Erro crítico ao inicializar a conexão com a base de dados.", 0);
+                    } else {
+                        alert("Erro crítico ao inicializar conexão com a base de dados. Verifique a consola (F12).");
+                    }
+                    return; // Interrompe a execução se o Supabase não puder ser inicializado
+                }
+            } else {
+                console.error("ERRO CRÍTICO: Biblioteca Supabase (objeto 'supabase' minúsculo) não está definida ou 'createClient' não é uma função.");
+                alert("Erro crítico: Falha ao carregar componentes essenciais. Verifique a consola (F12) e a sua ligação à internet.");
+                return; // Interrompe a execução
+            }
+
+            window.app = {
+                db: supabaseInstance, // Armazena a instância do cliente Supabase
+                clients: [], // Array para armazenar os clientes carregados
+                products: [ // Lista de produtos disponíveis
+                    { name: "Biovida", price: 17.00 }, { name: "Aqua Vita", price: 17.00 }, { name: "Purin", price: 17.00 },
+                    { name: "Premier", price: 22.00 }, { name: "Serra dos Órgãos", price: 22.00 },
+                    { name: "Lindoya Joia", price: 25.00 }
+                ],
+                currentOrder: [], // Array para o pedido atual
+                currentClient: null, // Objeto para o cliente atualmente selecionado/em foco
+                salesChartInstance: null, // Instância do gráfico de vendas
+
+                // Método de inicialização principal do aplicativo
+                async init() { 
+                    console.log("app.init() chamado");
+                    if (!this.db) {
+                        console.error("Falha na inicialização do app: this.db (cliente Supabase) não está definido.");
+                        this.showNotification("Falha crítica na inicialização da base de dados. Verifique a consola.", 0);
+                        return;
+                    }
+                    await this.loadClients(); // Carrega os clientes do banco de dados
+                    this.changeTab('clientes'); // Define a aba inicial
+                    this.setDefaultReportMonth(); // Define o mês padrão para relatórios
+                    this.setupEventListeners(); // Configura os ouvintes de eventos
+                    this.applyPhoneMask(document.getElementById('search-phone')); // Aplica máscara ao campo de busca de telefone
+                    this.applyPhoneMask(document.getElementById('new-client-phone')); // Aplica máscara ao campo de telefone do novo cliente
+                },
+
+                // Configura ouvintes de eventos globais e específicos de elementos
+                setupEventListeners() {
+                    const searchPhoneInput = document.getElementById('search-phone');
+                    if (searchPhoneInput) {
+                        searchPhoneInput.addEventListener('input', (e) => {
+                            this.applyPhoneMask(e.target); // Aplica máscara enquanto digita
+                            const unmaskedPhone = e.target.value.replace(/\D/g, '');
+                            // Busca automática se o telefone tiver 10 ou 11 dígitos
+                            if (unmaskedPhone.length === 10 || unmaskedPhone.length === 11) {
+                                this.searchClientByPhone(false); // false para não mostrar notificação de "não encontrado" imediatamente
+                            } else if (unmaskedPhone.length === 0) {
+                                this.clearClientAndOrderDetails(); // Limpa detalhes se o campo estiver vazio
+                                const btnContainer = document.getElementById('new-client-button-container');
+                                if(btnContainer) btnContainer.classList.add('hidden');
+                            }
+                        });
+                    }
+
+                    const newClientPhoneInput = document.getElementById('new-client-phone');
+                     if (newClientPhoneInput) {
+                        newClientPhoneInput.addEventListener('input', (e) => this.applyPhoneMask(e.target));
+                    }
+
+                    // Ouvinte para fechar modais com a tecla Escape
+                    window.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            this.closeModal('notification-modal');
+                            this.closeModal('locator-modal');
+                        }
+                    });
+                },
+                
+                // Aplica máscara de telefone (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+                applyPhoneMask(inputElement) {
+                    if (!inputElement) return;
+                    let value = inputElement.value.replace(/\D/g, ''); // Remove não dígitos
+                    if (value.length > 11) value = value.substring(0, 11); // Limita a 11 dígitos
+                    let maskedValue = '';
+                    if (value.length > 0) {
+                        maskedValue = '(' + value.substring(0, 2);
+                    }
+                    if (value.length > 2) {
+                        // Adapta para 8 ou 9 dígitos no corpo do número
+                        maskedValue += ') ' + value.substring(2, value.length <= 6 ? value.length : (value.length === 11 ? 7 : 6) );
+                    }
+                    if (value.length > (value.length === 11 ? 7 : 6)) {
+                        maskedValue += '-' + value.substring((value.length === 11 ? 7 : 6));
+                    }
+                    inputElement.value = maskedValue;
+                },
+
+                // Exibe uma notificação modal
+                showNotification(message, duration = 3000) {
+                    const modal = document.getElementById('notification-modal');
+                    const messageElement = document.getElementById('notification-message');
+                    if (modal && messageElement) {
+                        messageElement.textContent = message;
+                        modal.style.display = "block";
+                        if (duration > 0) { // Se duração > 0, fecha automaticamente
+                            setTimeout(() => {
+                                this.closeModal('notification-modal');
+                            }, duration);
+                        }
+                    } else {
+                        console.warn("Elementos do modal de notificação não encontrados ao tentar mostrar:", message);
+                        alert(message); // Fallback para alert se o modal não existir
+                    }
+                },
+
+                // Fecha um modal pelo ID
+                closeModal(modalId) {
+                    const modal = document.getElementById(modalId);
+                    if (modal) modal.style.display = "none";
+                },
+
+                // Alterna entre as abas da aplicação
+                changeTab(tabName) {
+                    // Esconde todas as abas
+                    ['clientes-tab', 'todos_clientes-tab', 'importar-tab', 'inativos-tab', 'relatorios-tab'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.add('hidden');
+                    });
+                    // Remove a classe 'active' de todos os botões de aba
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+                    // Mostra a aba atual
+                    const currentTabEl = document.getElementById(`${tabName}-tab`);
+                    if (currentTabEl) currentTabEl.classList.remove('hidden');
+                    
+                    // Adiciona a classe 'active' ao botão da aba atual
+                    const currentButtonEl = document.querySelector(`.tab-button[onclick*="'${tabName}'"]`);
+                    if (currentButtonEl) currentButtonEl.classList.add('active');
+
+                    // Ações específicas ao mudar para certas abas
+                    if (tabName === 'inativos') this.updateInactiveClientsPanel();
+                    if (tabName === 'relatorios') this.generateSalesReport(); // Gera relatório ao abrir a aba
+                    if (tabName === 'todos_clientes') this.displayAllClients(); 
+                },
+
+                // Carrega todos os clientes do Supabase com paginação
+                async loadClients() {
+                    if (!this.db) {
+                        this.showNotification("Erro: cliente Supabase não definido em loadClients.", 0);
+                        return;
+                    }
+
+                    const PAGE_SIZE = 1000; // Número de clientes por página
+                    let from = 0;
+                    let allClientsData = [];
+                    let totalSupabaseCount = 0; 
+                    let page = 1;
+
+                    this.showNotification("Carregando clientes da nuvem...", 0); // Notificação persistente
+                    console.log("Iniciando carregamento paginado de clientes...");
+
+                    try {
+                        let hasMore = true;
+                        while(hasMore) {
+                            console.log(`Buscando clientes: página ${page}, de ${from} a ${from + PAGE_SIZE - 1}`);
+                            const { data, error, count } = await this.db
+                                .from("clientes")
+                                .select(
+                                    `id, name, address, phone, createdAt, lastOrderDate,
+                                     pedidos:pedidos_client_id_fkey(id, date, items, total, paymentMethod)`, // Pega pedidos relacionados
+                                    { count: "exact" } // Pede a contagem total (só na primeira página)
+                                )
+                                .range(from, from + PAGE_SIZE - 1)
+                                .order("createdAt", { ascending: false });
+
+                            if (error) {
+                                console.error(`Erro ao carregar página ${page} de clientes:`, error);
+                                this.showNotification(`Falha ao ler clientes: ${error.message}`, 0);
+                                this.closeModal('notification-modal'); // Fecha notificação persistente em caso de erro
+                                return;
+                            }
+
+                            if (data) {
+                                allClientsData.push(...data);
+                                console.log(`${data.length} clientes recebidos nesta página. Total acumulado: ${allClientsData.length}`);
+                            }
+                            
+                            if (page === 1 && count !== null) {
+                                totalSupabaseCount = count; // Armazena a contagem total do Supabase
+                                console.log(`Contagem total de clientes reportada pelo Supabase: ${totalSupabaseCount}`);
+                            }
+
+                            if (!data || data.length < PAGE_SIZE) {
+                                hasMore = false; // Não há mais páginas
+                            } else {
+                                from += PAGE_SIZE;
+                                page++;
+                            }
+                        }
+
+                        // Mapeia os dados, ordenando os pedidos de cada cliente
+                        this.clients = allClientsData.map(client => ({
+                            ...client,
+                            orders: (client.pedidos || []).sort( // Garante que 'pedidos' exista e ordena
+                                (a, b) => new Date(b.date) - new Date(a.date) // Mais recentes primeiro
+                            )
+                        }));
+                        
+                        this.closeModal('notification-modal'); // Fecha a notificação de "carregando"
+                        this.showNotification(`Clientes carregados! Total: ${this.clients.length}`, 3000);
+                        console.log(`Carregamento finalizado. Total de clientes em this.clients: ${this.clients.length}. Contagem do Supabase (primeira página): ${totalSupabaseCount}`);
+
+                    } catch (error) {
+                        console.error('Exceção durante o carregamento paginado de clientes:', error);
+                        this.showNotification(`Exceção ao carregar clientes: ${error.message}`, 0);
+                        this.closeModal('notification-modal');
+                    }
+                    
+                    this.updateInactiveClientsPanel(); // Atualiza o painel de inativos após carregar
+                    this.displayAllClients(); // Atualiza a lista de todos os clientes
+                },
+
+                // Extrai nome e endereço de um campo combinado (usado na importação)
+                extractNameAndAddress(nameField) {
+                    if (!nameField || typeof nameField !== 'string') return { name: '', address: '' };
+                    nameField = nameField.trim();
+                    let name = nameField;
+                    let address = '';
+
+                    // Tentativa 1: Separador " - "
+                    const hyphenSeparatorIndex = nameField.indexOf(" - ");
+                    if (hyphenSeparatorIndex !== -1) {
+                        name = nameField.substring(0, hyphenSeparatorIndex).trim();
+                        address = nameField.substring(hyphenSeparatorIndex + 3).trim();
+                        if (name && address) return { name, address }; // Retorna se ambos foram encontrados
+                    }
+                    
+                    // Tentativa 2: Palavras-chave de endereço e heurísticas
+                    const addressKeywords = ['rua', 'av', 'av.', 'avenida', 'travessa', 'trv', 'alameda', 'estrada', 'rodovia', 'praça', 'largo', 'condominio', 'cond.', 'bloco', 'bl.', 'apto', 'apartamento', 'casa', 'cs', 'km', 'nº', 'numero', 'cep', 'sala', 'sl', 'lj', 'loja'];
+                    const parts = nameField.split(/\s+/);
+                    let nameEndIndex = parts.length; // Padrão: tudo é nome
+
+                    // Procura por palavras-chave de endereço ou números (exceto no início)
+                    for (let i = 1; i < parts.length; i++) { // Começa do segundo item para permitir nomes compostos
+                        const currentWord = parts[i].toLowerCase().replace(/[.,]/g, ''); // Remove pontuação para match
+                        const prevWord = parts[i-1];
+                        // Se a palavra atual for um número (e não a primeira palavra do nome) ou uma keyword de endereço
+                        // OU se a palavra anterior terminar com vírgula (indicando fim do nome)
+                        if ( ( (/^\d+$/.test(parts[i]) || addressKeywords.includes(currentWord)) && i > 1 ) || (prevWord && prevWord.endsWith(',')) ) {
+                            let potentialNameEnd = i;
+                            if (parts[i-1] && parts[i-1].endsWith(',')) potentialNameEnd = i-1; // Se terminou com vírgula, o nome é até a palavra anterior
+                            
+                            // Heurística: Nomes geralmente têm de 1 a 4 palavras
+                            const numNameWords = potentialNameEnd;
+                            if (numNameWords >= 1 && numNameWords <= 4) { 
+                                nameEndIndex = potentialNameEnd;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    name = parts.slice(0, nameEndIndex).join(' ').trim();
+                    address = parts.slice(nameEndIndex).join(' ').trim();
+
+                    // Fallback: se o endereço ainda estiver vazio e houver muitas palavras, tenta dividir (ex: 2 ou 3 primeiras palavras como nome)
+                    if (!address && parts.length > 3) {
+                        let splitPoint = 2; // Padrão: 2 primeiras palavras são nome
+                        if (parts.length > 4 && parts[2].length > 2) splitPoint = 3; // Se nome longo, tenta 3 palavras
+                        name = parts.slice(0, splitPoint).join(' ');
+                        address = parts.slice(splitPoint).join(' ');
+                    }
+                    return { name: name || nameField, address: address || 'Endereço não especificado' };
+                },
+
+                // Importa clientes de um arquivo Excel
+                async importClientsFromExcel() {
+                    if (!this.db) {
+                        this.showNotification("Erro: Conexão com a base de dados não estabelecida.", 0);
+                        return;
+                    }
+                    const fileInput = document.getElementById('excel-file-input');
+                    const importStatus = document.getElementById('import-status');
+                    if (!fileInput || !importStatus) {
+                        console.error("Elementos de importação não encontrados no DOM.");
+                        this.showNotification("Erro interno: Elementos da página não encontrados.", 0);
+                        return;
+                    }
+                    if (!fileInput.files.length) {
+                        this.showNotification("Por favor, selecione um arquivo Excel.");
+                        return;
+                    }
+
+                    this.showNotification("Importando clientes... Por favor, aguarde.", 0); // Notificação persistente
+                    importStatus.textContent = "Lendo o arquivo Excel...";
+                    console.log("Iniciando importação do Excel...");
+                    
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        try {
+                            const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' });
+                            let clientsFromExcel = [];
+                            const nowISO = new Date().toISOString(); // Data de criação padrão
+                            console.log("Arquivo Excel lido, processando planilhas...");
+
+                            // Itera sobre cada planilha no arquivo
+                            for (const sheetName of workbook.SheetNames) {
+                                console.log(`Lendo planilha: ${sheetName}`);
+                                const ws = workbook.Sheets[sheetName];
+                                const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 }); // Converte para array de arrays
+                                
+                                if (jsonData.length < 2) { // Precisa de cabeçalho + pelo menos uma linha de dados
+                                    console.log(`Planilha ${sheetName} vazia ou sem dados suficientes.`);
+                                    continue;
+                                }
+
+                                const header = jsonData[0].map(h => String(h).trim().toLowerCase()); // Pega cabeçalhos
+                                const nameIdx = header.indexOf("name"); // Coluna "Name"
+                                const phoneIdx = header.indexOf("mobile phone"); // Coluna "Mobile Phone"
+
+                                if (nameIdx === -1 || phoneIdx === -1) {
+                                    console.warn(`Planilha "${sheetName}" ignorada: cabeçalhos "Name" ou "Mobile Phone" não encontrados.`);
+                                    importStatus.textContent = `Erro na planilha ${sheetName}: Cabeçalhos "Name" ou "Mobile Phone" não encontrados.`;
+                                    continue;
+                                }
+                                
+                                // Itera sobre as linhas de dados
+                                for (let i = 1; i < jsonData.length; i++) {
+                                    const row = jsonData[i];
+                                    const nameField = row[nameIdx] ? String(row[nameIdx]).trim() : '';
+                                    const phone = row[phoneIdx] ? String(row[phoneIdx]).replace(/\D/g, '') : ''; // Limpa telefone
+                                    if (nameField && phone) { // Só adiciona se tiver nome e telefone
+                                        const { name, address } = this.extractNameAndAddress(nameField);
+                                        clientsFromExcel.push({ name, address, phone, createdAt: nowISO });
+                                    }
+                                }
+                            }
+                            
+                            if (clientsFromExcel.length === 0) {
+                                importStatus.textContent = "Nenhum cliente válido encontrado no arquivo para importar.";
+                                this.showNotification("Nenhum cliente válido para importar.", 3000);
+                                if (fileInput) fileInput.value = ''; // Limpa o input de arquivo
+                                this.closeModal('notification-modal');
+                                return;
+                            }
+                            
+                            console.log(`${clientsFromExcel.length} clientes lidos do Excel. Removendo duplicados do Excel...`);
+                            
+                            // Remove duplicados (baseado no telefone) do próprio arquivo Excel antes de enviar ao Supabase
+                            const uniqueClientsMap = new Map();
+                            clientsFromExcel.forEach(client => {
+                                if (!uniqueClientsMap.has(client.phone)) {
+                                    uniqueClientsMap.set(client.phone, client);
+                                }
+                            });
+                            const clientsToUpsert = Array.from(uniqueClientsMap.values());
+                            const numDuplicatesInExcel = clientsFromExcel.length - clientsToUpsert.length;
+                            
+                            console.log(`${clientsToUpsert.length} clientes únicos (por telefone) do Excel serão processados. ${numDuplicatesInExcel} duplicados no Excel foram removidos.`);
+                            importStatus.textContent = `Processando ${clientsToUpsert.length} clientes únicos (removidos ${numDuplicatesInExcel} duplicados do arquivo)...`;
+
+                            const BATCH_SIZE_UPSERT = 100; // Tamanho do lote para upsert no Supabase
+                            let totalSuccessfullyUpserted = 0; 
+                            let errorsDuringUpsert = 0;
+
+                            // Envia em lotes para o Supabase usando upsert
+                            for (let i = 0; i < clientsToUpsert.length; i += BATCH_SIZE_UPSERT) {
+                                const batch = clientsToUpsert.slice(i, i + BATCH_SIZE_UPSERT);
+                                if (batch.length > 0) {
+                                    const currentBatchNumber = Math.floor(i / BATCH_SIZE_UPSERT) + 1;
+                                    const totalBatches = Math.ceil(clientsToUpsert.length / BATCH_SIZE_UPSERT);
+                                    console.log(`Enviando lote ${currentBatchNumber}/${totalBatches} (${batch.length} clientes) para upsert...`);
+                                    importStatus.textContent = `Enviando lote ${currentBatchNumber} de ${totalBatches}...`;
+                                    
+                                    const { data, error } = await this.db // USA this.db
+                                        .from('clientes')
+                                        .upsert(batch, {
+                                            onConflict: 'phone', // Coluna 'phone' DEVE ter uma UNIQUE constraint no DB
+                                        })
+                                        .select(); // Pede para retornar os dados inseridos/atualizados
+
+                                    if (error) {
+                                        console.error(`Erro ao processar lote ${currentBatchNumber} de clientes com upsert:`, error);
+                                        errorsDuringUpsert += batch.length; // Assume que todo o lote falhou em caso de erro
+                                        this.showNotification(`Erro no lote ${currentBatchNumber}: ${error.message}. Verifique a consola.`, 5000);
+                                    } else {
+                                        console.log(`Lote ${currentBatchNumber} processado. Dados retornados pelo upsert:`, data);
+                                        if (data) {
+                                            totalSuccessfullyUpserted += data.length; // Conta os registros efetivamente retornados
+                                        } else {
+                                            // Se data é null, mas não houve erro, o Supabase pode ter ignorado duplicados sem retornar os dados.
+                                            // A contagem final será mais precisa após o loadClients.
+                                            console.log(`Lote ${currentBatchNumber} enviado (sem retorno de dados explícito do upsert).`);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            console.log("Operação de Upsert concluída. Recarregando lista de clientes para contagem final...");
+                            importStatus.textContent = "Atualizando lista de clientes...";
+                            await this.loadClients(); // Recarrega todos os clientes para refletir as mudanças
+                            
+                            const finalMessage = `${clientsToUpsert.length - errorsDuringUpsert} clientes do Excel processados (inseridos/atualizados). ${errorsDuringUpsert} falharam durante o upsert. Total na base: ${this.clients.length}.`;
+                            importStatus.textContent = finalMessage;
+                            this.showNotification(finalMessage, 7000);
+                            if (fileInput) fileInput.value = ''; // Limpa o input
+
+                        } catch (e) {
+                            console.error("Erro geral durante a importação:", e);
+                            this.showNotification(`Erro ao importar: ${e.message}. Verifique a consola.`, 0);
+                            importStatus.textContent = `Erro na importação: ${e.message}. Verifique a consola.`;
+                        } finally {
+                           this.closeModal('notification-modal'); // Fecha a notificação persistente de "importando"
+                        }
+                    };
+                    reader.readAsArrayBuffer(fileInput.files[0]);
+                },
+                
+                // Limpa os detalhes do cliente e do pedido na interface
+                clearClientAndOrderDetails() {
+                    const clientNameDisplay = document.getElementById('client-name-display');
+                    const clientAddressDisplay = document.getElementById('client-address-display');
+                    const clientPhoneDisplay = document.getElementById('client-phone-display');
+                    const currentClientId = document.getElementById('current-client-id');
+                    const clientAndOrderSection = document.getElementById('client-and-order-section');
+                    const newClientFormSection = document.getElementById('new-client-form-section');
+                    const simpleWhatsappContainer = document.getElementById('simple-whatsapp-container');
+                    const lastOrdersList = document.getElementById('last-orders-list');
+                    const paymentMethodEl = document.getElementById('payment-method');
+
+                    if(clientNameDisplay) clientNameDisplay.textContent = '';
+                    if(clientAddressDisplay) clientAddressDisplay.textContent = '';
+                    if(clientPhoneDisplay) clientPhoneDisplay.textContent = '';
+                    if(currentClientId) currentClientId.value = '';
+                    if(clientAndOrderSection) clientAndOrderSection.classList.add('hidden');
+                    if(newClientFormSection) newClientFormSection.classList.add('hidden');
+                    if(simpleWhatsappContainer) simpleWhatsappContainer.classList.add('hidden');
+                    if(lastOrdersList) lastOrdersList.innerHTML = '<p class="text-gray-500">Nenhum pedido anterior registrado.</p>';
+                    if(paymentMethodEl) paymentMethodEl.value = ''; 
+                    
+                    this.currentClient = null;
+                    this.currentOrder = [];
+                    this.renderOrderItems(); // Limpa e renderiza a lista de itens (vazia)
+                },
+
+                // Busca um cliente pelo telefone
+                async searchClientByPhone(showNotFoundNotification = true) { 
+                    if (!this.db) return this.showNotification("Erro: Conexão com a base de dados não estabelecida.", 0);
+                    const phoneInput = document.getElementById('search-phone');
+                    const phone = phoneInput.value.replace(/\D/g, ''); // Limpa o telefone
+                    const newClientBtnContainer = document.getElementById('new-client-button-container');
+
+                    if (!phone && showNotFoundNotification) { // Se o campo estiver vazio (e não for busca automática)
+                        this.showNotification("Digite um telefone para buscar.");
+                        return;
+                    }
+                    
+                    this.showNotification("Buscando cliente...", 0); // Notificação persistente
+                    try {
+                        // Busca o cliente e seus pedidos associados
+                        const { data: foundClient, error } = await this.db // USA this.db
+                            .from('clientes')
+                            .select(`
+                                *,
+                                pedidos:pedidos_client_id_fkey( 
+                                    id, date, items, total, paymentMethod
+                                )
+                            `)
+                            .eq('phone', phone)
+                            .maybeSingle(); // Retorna um único objeto ou null
+
+                        if (error) throw error; // Lança erro para o catch
+                        
+                        this.closeModal('notification-modal'); // Fecha "buscando"
+
+                        if (foundClient) {
+                            // Processa os pedidos do cliente encontrado
+                            const relatedOrders = foundClient.pedidos || [];
+                            foundClient.orders = relatedOrders.sort((a, b) => new Date(b.date) - new Date(a.date)); // Ordena
+                            delete foundClient.pedidos; // Remove a propriedade aninhada original
+                            
+                            this.displayClientDetails(foundClient); // Exibe os detalhes
+                            if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                            const newClientFormSection = document.getElementById('new-client-form-section');
+                            if(newClientFormSection) newClientFormSection.classList.add('hidden');
+                        } else {
+                            this.clearClientAndOrderDetails(); // Limpa se não encontrado
+                            if (phone.length >= 10) { // Se um telefone válido foi digitado mas não encontrado
+                                 if(newClientBtnContainer) newClientBtnContainer.classList.remove('hidden'); // Mostra botão de novo cliente
+                                 if (showNotFoundNotification) {
+                                    this.showNotification("Cliente não encontrado. Cadastre abaixo ou use o Localizador.");
+                                 }
+                            } else {
+                                if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro ao buscar cliente por telefone:', error);
+                        this.showNotification(`Erro ao buscar cliente: ${error.message}`);
+                        this.closeModal('notification-modal');
+                    }
+                },
+
+                // Exibe os detalhes de um cliente na interface
+                displayClientDetails(client) { 
+                    this.currentClient = client; // Define o cliente atual
+                    
+                    const clientNameDisplay = document.getElementById('client-name-display');
+                    const clientAddressDisplay = document.getElementById('client-address-display');
+                    const clientPhoneDisplay = document.getElementById('client-phone-display');
+                    const currentClientId = document.getElementById('current-client-id');
+                    const searchPhoneEl = document.getElementById('search-phone');
+                    const clientAndOrderSection = document.getElementById('client-and-order-section');
+                    const simpleWhatsappContainer = document.getElementById('simple-whatsapp-container');
+                    const newClientFormSection = document.getElementById('new-client-form-section');
+                    const newClientBtnContainer = document.getElementById('new-client-button-container');
+
+                    // Preenche os campos com os dados do cliente
+                    if(clientNameDisplay) clientNameDisplay.textContent = client.name;
+                    if(clientAddressDisplay) clientAddressDisplay.textContent = client.address;
+                    if(clientPhoneDisplay) clientPhoneDisplay.textContent = this.formatPhone(client.phone);
+                    if(currentClientId) currentClientId.value = client.id;
+                    if(searchPhoneEl) searchPhoneEl.value = this.formatPhone(client.phone); // Atualiza campo de busca
+
+                    // Mostra/esconde seções relevantes
+                    if(clientAndOrderSection) clientAndOrderSection.classList.remove('hidden');
+                    if(simpleWhatsappContainer) simpleWhatsappContainer.classList.remove('hidden');
+                    if(newClientFormSection) newClientFormSection.classList.add('hidden');
+                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                    
+                    this.resetOrderForm(); // Reseta o formulário de pedido
+                    this.updateLastOrdersSummary(); // Atualiza o resumo dos últimos pedidos
+                    this.generateSimpleWhatsAppMessage(); // Gera a mensagem rápida para WhatsApp
+                },
+                
+                // Mostra o formulário de novo cliente, preenchendo o telefone se disponível
+                showNewClientFormFromButton() {
+                    const phoneFromSearch = document.getElementById('search-phone').value;
+                    const newClientForm = document.getElementById('new-client-form-section');
+                    const newClientPhoneEl = document.getElementById('new-client-phone');
+                    const newClientNameEl = document.getElementById('new-client-name');
+                    const newClientAddressEl = document.getElementById('new-client-address');
+                    const newClientBtnContainer = document.getElementById('new-client-button-container');
+                    const clientAndOrderSection = document.getElementById('client-and-order-section');
+
+
+                    if(newClientForm) newClientForm.classList.remove('hidden');
+                    if(newClientPhoneEl) {
+                        newClientPhoneEl.value = phoneFromSearch; // Preenche o telefone do campo de busca
+                        this.applyPhoneMask(newClientPhoneEl); // Aplica máscara
+                    }
+                    if(newClientNameEl) newClientNameEl.value = ''; // Limpa nome
+                    if(newClientAddressEl) newClientAddressEl.value = ''; // Limpa endereço
+                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden'); // Esconde botão de novo cliente
+                    if(clientAndOrderSection) clientAndOrderSection.classList.add('hidden'); // Esconde seção de pedido existente
+                },
+
+                // Salva um novo cliente e prossegue para o pedido
+                async saveNewClientAndProceedToOrder() {
+                    if (!this.db) return this.showNotification("Erro: Conexão com a base de dados não estabelecida.", 0);
+                    const name = document.getElementById('new-client-name').value.trim();
+                    const address = document.getElementById('new-client-address').value.trim();
+                    const phone = document.getElementById('new-client-phone').value.replace(/\D/g, '');
+
+                    if (!name || !phone || (phone.length < 10)) { // Validação básica
+                        return this.showNotification("Nome e Telefone (completo) são obrigatórios.");
+                    }
+                    
+                    this.showNotification("Salvando novo cliente...", 0);
+                    try {
+                         // Verifica se já existe um cliente com este telefone
+                         const { data: existingClient, error: fetchError } = await this.db // USA this.db
+                            .from('clientes')
+                            .select('id')
+                            .eq('phone', phone)
+                            .maybeSingle();
+
+                        if (fetchError) throw fetchError;
+
+                        if (existingClient) { // Se já existe, não cadastra de novo
+                            this.closeModal('notification-modal');
+                            return this.showNotification("Um cliente com este telefone já existe. Use o Localizador.");
+                        }
+
+                        // Prepara os dados do novo cliente
+                        const newClientData = { 
+                            name, 
+                            address, 
+                            phone, 
+                            createdAt: new Date().toISOString(),
+                            // lastOrderDate será nulo por padrão
+                        };
+                        // Insere o novo cliente
+                        const { data: insertedClientArray, error: insertError } = await this.db // USA this.db
+                            .from('clientes')
+                            .insert([newClientData])
+                            .select(); // Pede para retornar o cliente inserido
+
+                        if (insertError) throw insertError;
+                        
+                        if (!insertedClientArray || insertedClientArray.length === 0) {
+                            throw new Error("Falha ao obter dados do cliente inserido.");
+                        }
+                        // CORREÇÃO DO SPREAD OPERATOR APLICADA AQUI
+                        const newClientWithId = { ...insertedClientArray[0], orders: [] }; // Adiciona array de pedidos vazio
+
+                        this.clients.push(newClientWithId); // Adiciona à lista local de clientes
+                        this.showNotification(`Cliente ${name} cadastrado!`);
+                        this.displayClientDetails(newClientWithId); // Exibe os detalhes do novo cliente
+                        this.updateInactiveClientsPanel(); // Atualiza painel de inativos
+                        this.displayAllClients(); // Atualiza lista de todos os clientes
+
+                    } catch (error) {
+                        console.error('Erro ao salvar novo cliente:', error);
+                        this.showNotification(`Erro ao salvar cliente: ${error.message}`);
+                        this.closeModal('notification-modal');
+                    }
+                },
+
+                // Formata um número de telefone para exibição
+                formatPhone(phone) {
+                    if (!phone) return '';
+                    const cleaned = String(phone).replace(/\D/g, '');
+                    if (cleaned.length === 11) return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    if (cleaned.length === 10) return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                    return phone; // Retorna original se não bater com os formatos
+                },
+
+                // Reseta o formulário de pedido
+                resetOrderForm() {
+                    this.currentOrder = []; // Limpa itens do pedido
+                    this.renderOrderItems(); // Renderiza (que irá adicionar um item inicial se currentClient existir)
+                    this.updateOrderTotal(); // Atualiza o total (será 0.00)
+                    const paymentMethodEl = document.getElementById('payment-method');
+                    if (paymentMethodEl) {
+                        paymentMethodEl.value = ''; // Limpa forma de pagamento
+                    } else {
+                        console.warn("Elemento 'payment-method' não encontrado em resetOrderForm.");
+                    }
+                    
+                    const whatsappMsgCompleteEl = document.getElementById('whatsapp-message-complete');
+                    if (whatsappMsgCompleteEl) {
+                        whatsappMsgCompleteEl.classList.add('hidden'); // Esconde mensagem completa
+                        whatsappMsgCompleteEl.value = '';
+                    } else {
+                        console.warn("Elemento 'whatsapp-message-complete' não encontrado em resetOrderForm.");
+                    }
+                    this.generateSimpleWhatsAppMessage(); // Gera mensagem simples (que ficará básica)
+                },
+
+                // Adiciona um novo item ao pedido atual
+                addOrderItem() {
+                    this.currentOrder.push({ brand: "", quantity: 1, price: 0 });
+                    this.renderOrderItems();
+                },
+
+                // Remove um item do pedido atual
+                removeOrderItem(index) {
+                    this.currentOrder.splice(index, 1);
+                    this.renderOrderItems();
+                    this.updateOrderTotal(); // Recalcula total após remover
+                },
+                
+                // Renderiza os itens do pedido na interface
+                renderOrderItems() {
+                    const container = document.getElementById('order-items-container');
+                    if (!container) {
+                        console.warn("Elemento 'order-items-container' não encontrado em renderOrderItems.");
+                        return;
+                    }
+                    container.innerHTML = ''; // Limpa o container
+                    // Se não houver itens E um cliente estiver selecionado, adiciona um item vazio para começar
+                    if (this.currentOrder.length === 0 && this.currentClient) { 
+                         this.currentOrder.push({ brand: "", quantity: 1, price: 0 });
+                    }
+
+                    // Cria os elementos HTML para cada item do pedido
+                    this.currentOrder.forEach((item, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'flex space-x-2 items-center p-2 border rounded-md bg-gray-50';
+                        itemDiv.innerHTML = `
+                            <select onchange="app.updateOrderItem(${index}, this.value, null)" class="form-input flex-grow">
+                                <option value="">Selecione Marca</option>
+                                ${this.products.map(p => `<option value="${p.name}" ${item.brand === p.name ? 'selected' : ''}>${p.name} - R$ ${p.price.toFixed(2)}</option>`).join('')}
+                            </select>
+                            <input type="number" min="1" value="${item.quantity}" onchange="app.updateOrderItem(${index}, null, parseInt(this.value))" class="form-input w-20 text-center" placeholder="Qtd">
+                            <button onclick="app.removeOrderItem(${index})" class="btn btn-danger btn-sm p-1.5">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" /></svg>
+                            </button>
+                        `;
+                        container.appendChild(itemDiv);
+                    });
+                    this.updateOrderTotal(); // Atualiza o total sempre que os itens são renderizados
+                },
+
+                // Atualiza um item do pedido (marca ou quantidade)
+                updateOrderItem(index, brand, quantity) {
+                    if (brand !== null) { // Se a marca foi alterada
+                        const product = this.products.find(p => p.name === brand);
+                        this.currentOrder[index].brand = brand;
+                        this.currentOrder[index].price = product ? product.price : 0; // Atualiza o preço
+                    }
+                    if (quantity !== null) { // Se a quantidade foi alterada
+                        this.currentOrder[index].quantity = Math.max(1, quantity); // Garante quantidade mínima de 1
+                    }
+                    this.updateOrderTotal(); // Recalcula o total
+                },
+
+                // Atualiza o total do pedido na interface
+                updateOrderTotal() {
+                    const total = this.currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                    const orderTotalEl = document.getElementById('order-total');
+                    if(orderTotalEl) orderTotalEl.textContent = total.toFixed(2);
+                    this.generateSimpleWhatsAppMessage(); // Atualiza mensagem rápida do WhatsApp
+                },
+
+                // Finaliza o pedido, salvando no Supabase
+                async finalizeOrder() {
+                    // USA this.db
+                    if (!this.db) return this.showNotification("Erro: Conexão com a base de dados não estabelecida.", 0);
+                    if (!this.currentClient) return this.showNotification("Nenhum cliente selecionado.");
+                    
+                    // Filtra apenas itens válidos (com marca e quantidade)
+                    const validItems = this.currentOrder.filter(item => item.brand && item.quantity > 0);
+                    if (validItems.length === 0) return this.showNotification("Adicione itens ao pedido.");
+
+                    const paymentMethodEl = document.getElementById('payment-method');
+                    const paymentMethod = paymentMethodEl ? paymentMethodEl.value : "";
+
+                    if (!paymentMethod) {
+                        return this.showNotification("Por favor, selecione a forma de pagamento.");
+                    }
+                    
+                    this.showNotification("Finalizando pedido...", 0);
+                    try {
+                        // Prepara os dados do pedido para salvar
+                        const orderDataToSave = {
+                            client_id: this.currentClient.id, // Chave estrangeira para o cliente
+                            date: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
+                            items: validItems.map(item => ({ brand: item.brand, quantity: item.quantity, price: item.price })), 
+                            total: parseFloat(document.getElementById('order-total').textContent),
+                            paymentMethod: paymentMethod 
+                        };
+
+                        // Insere o pedido na tabela 'pedidos'
+                        const { data: insertedOrderArray, error: orderError } = await this.db // USA this.db
+                            .from('pedidos')
+                            .insert([orderDataToSave])
+                            .select(); // Pede para retornar o pedido inserido
+
+                        if (orderError) throw orderError;
+                        if (!insertedOrderArray || insertedOrderArray.length === 0) {
+                            throw new Error("Falha ao obter dados do pedido inserido.");
+                        }
+                        const insertedOrder = insertedOrderArray[0];
+
+                        // Atualiza a data do último pedido do cliente na tabela 'clientes'
+                        const { error: clientUpdateError } = await this.db // USA this.db
+                            .from('clientes')
+                            .update({ lastOrderDate: orderDataToSave.date })
+                            .eq('id', this.currentClient.id);
+
+                        if (clientUpdateError) throw clientUpdateError;
+
+                        // Atualiza os dados locais do cliente
+                        this.currentClient.lastOrderDate = orderDataToSave.date;
+                        if (!this.currentClient.orders) this.currentClient.orders = [];
+                        this.currentClient.orders.push(insertedOrder); // Adiciona o novo pedido à lista local
+                        
+                        // Atualiza o cliente na lista global 'this.clients'
+                        const clientIndex = this.clients.findIndex(c => c.id === this.currentClient.id);
+                        if (clientIndex !== -1) {
+                            // CORREÇÃO DO SPREAD OPERATOR APLICADA AQUI
+                            this.clients[clientIndex] = { ...this.currentClient }; 
+                        }
+
+                        this.showNotification("Pedido finalizado e salvo na nuvem!");
+                        this.updateInactiveClientsPanel(); // Atualiza painel de inativos
+                        this.updateLastOrdersSummary(); // Atualiza resumo dos últimos pedidos na interface
+                        this.generateWhatsAppMessage(true); // Gera mensagem completa do WhatsApp (indicando que foi finalizado)
+                        // Opcional: this.resetOrderForm(); // Para limpar o formulário após finalizar
+
+                    } catch (error) {
+                        console.error('Erro ao finalizar pedido:', error);
+                        this.showNotification(`Erro ao finalizar pedido: ${error.message}`);
+                        this.closeModal('notification-modal');
+                    }
+                },
+                
+                // Determina a saudação (Sr./Sra.) com base no nome
+                getSalutation(name) {
+                    if (!name) return "Prezado(a)";
+                    const firstName = name.split(' ')[0].toLowerCase();
+                    // Lista simples de nomes femininos comuns ou terminados em 'a'
+                    if (['ana', 'maria', 'julia', 'laura', 'sofia', 'helena', 'manuela', 'isabela', 'alice', 'beatriz', 'clara', 'eloa', 'giulia', 'isadora', 'livia', 'lorena', 'luiza', 'mariana', 'melissa', 'valentina', 'yasmin'].some(n => firstName.includes(n)) || firstName.endsWith('a')) {
+                        return "Prezada Sra.";
+                    }
+                    return "Prezado Sr.";
+                },
+
+                // Gera a mensagem rápida para WhatsApp
+                generateSimpleWhatsAppMessage() {
+                    const el = document.getElementById('whatsapp-message-simple');
+                    if (!el) { 
+                        console.warn("Elemento 'whatsapp-message-simple' não encontrado.");
+                        return;
+                    }
+
+                    if (!this.currentClient) { // Se não há cliente, limpa a mensagem
+                        el.value = '';
+                        return;
+                    }
+                    const salutation = this.getSalutation(this.currentClient.name);
+                    const itemsSummary = this.currentOrder
+                        .filter(item => item.brand && item.quantity > 0) // Apenas itens válidos
+                        .map(item => `${item.quantity} ${item.brand}`) 
+                        .join(', ');
+
+                    let message = `${salutation} ${this.currentClient.name}`;
+                    if (this.currentClient.address && this.currentClient.address !== 'Endereço não especificado') {
+                        message += ` – ${this.currentClient.address}`;
+                    }
+                    if (itemsSummary) {
+                        message += ` – ${itemsSummary}`;
+                    } else {
+                        message += " – (Nenhum item selecionado)";
+                    }
+                    el.value = message;
+                },
+
+                // Copia a mensagem rápida do WhatsApp para a área de transferência
+                copySimpleWhatsAppMessage() {
+                    const text = document.getElementById('whatsapp-message-simple').value;
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showNotification("Mensagem rápida copiada!");
+                    }).catch(err => {
+                        console.error("Falha ao copiar mensagem rápida:", err);
+                        this.showNotification("Falha ao copiar. Verifique as permissões do navegador.");
+                    });
+                },
+
+                // Gera a mensagem completa do pedido para WhatsApp
+                generateWhatsAppMessage(isFinalized = false) { 
+                    const validItems = this.currentOrder.filter(item => item.brand && item.quantity > 0);
+                    if (validItems.length === 0) {
+                        if (!isFinalized) this.showNotification("Adicione itens para gerar a mensagem completa.");
+                        return;
+                    }
+                    const totalEl = document.getElementById('order-total');
+                    const total = totalEl ? parseFloat(totalEl.textContent) : 0;
+                    const itemsSummary = validItems.map(item => `${item.quantity}x ${item.brand}`).join(', ');
+                    
+                    let paymentMethodInfo = '';
+                    // Se o pedido foi finalizado, pega a forma de pagamento do último pedido salvo
+                    if (isFinalized && this.currentClient && this.currentClient.orders && this.currentClient.orders.length > 0) {
+                        // Pega o último pedido da lista local do cliente (que acabou de ser atualizada)
+                        const lastOrder = this.currentClient.orders[this.currentClient.orders.length - 1];
+                        if (lastOrder.paymentMethod) {
+                            paymentMethodInfo = ` – Pagamento: ${lastOrder.paymentMethod}`;
+                        }
+                    } else if (!isFinalized) { // Se não foi finalizado, pega do select
+                        const paymentMethodEl = document.getElementById('payment-method');
+                        const selectedPaymentMethod = paymentMethodEl ? paymentMethodEl.value : "";
+                        if (selectedPaymentMethod) {
+                             paymentMethodInfo = ` – Pagamento: ${selectedPaymentMethod}`;
+                        }
+                    }
+
+                    const message = `Pedido: ${itemsSummary} – Total: R$ ${total.toFixed(2)}${paymentMethodInfo}`;
+                    
+                    const textarea = document.getElementById('whatsapp-message-complete');
+                    if (textarea) {
+                        textarea.value = message;
+                        textarea.classList.remove('hidden');
+                        textarea.select(); // Seleciona para facilitar a cópia manual
+                        try {
+                            navigator.clipboard.writeText(message).then(() => {
+                                 if (!isFinalized) this.showNotification("Mensagem completa copiada!");
+                            });
+                        } catch (err) { 
+                            console.warn('Falha ao copiar msg completa automaticamente:', err); 
+                        }
+                    }
+                },
+
+                // Atualiza o painel de clientes inativos
+                updateInactiveClientsPanel() { 
+                    const listEl = document.getElementById('inactive-clients-list');
+                    if (!listEl) return;
+                    listEl.innerHTML = ''; // Limpa a lista
+                    const today = new Date();
+                    // Ordena os clientes pela data do último pedido (mais antigos primeiro)
+                    const sortedClients = [...this.clients].sort((a,b) => (new Date(a.lastOrderDate || 0)) - (new Date(b.lastOrderDate || 0)));
+
+                    if (sortedClients.length === 0) {
+                        listEl.innerHTML = '<tr><td colspan="6" class="px-4 py-3 text-center text-gray-500">Nenhum cliente.</td></tr>';
+                        return;
+                    }
+                    let inactiveFound = false;
+                    sortedClients.forEach(client => {
+                        let daysDiff = Infinity, colorClass = 'status-red', lastOrderStr = 'Nunca comprou';
+                        if (client.lastOrderDate) {
+                            // Adiciona T00:00:00 para evitar problemas de fuso horário ao calcular a diferença de dias
+                            const lastDate = new Date(client.lastOrderDate + "T00:00:00"); 
+                            daysDiff = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+                            lastOrderStr = lastDate.toLocaleDateString('pt-BR');
+                            // Define a cor do status com base nos dias sem comprar
+                            if (daysDiff < 10) colorClass = ''; // Não mostra status se menos de 10 dias
+                            else if (daysDiff < 20) colorClass = 'status-blue'; // 10-19 dias
+                            else if (daysDiff < 30) colorClass = 'status-yellow'; // 20-29 dias
+                            // Acima de 30 dias permanece 'status-red' (padrão)
+                        }
+                        if (colorClass) { // Só adiciona à lista se tiver uma classe de status (ou seja, inativo)
+                            inactiveFound = true;
+                            const row = listEl.insertRow();
+                            row.innerHTML = `
+                                <td class="px-4 py-3"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">&nbsp;</span></td>
+                                <td class="px-4 py-3 text-sm text-gray-800">${client.name}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500">${this.formatPhone(client.phone)}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500">${lastOrderStr}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500">${daysDiff === Infinity ? 'N/A' : daysDiff}</td>
+                                `;
+                        }
+                    });
+                    if (!inactiveFound) { // Se nenhum inativo foi encontrado
+                         listEl.innerHTML = '<tr><td colspan="6" class="px-4 py-3 text-center text-gray-500">Nenhum cliente inativo (10+ dias).</td></tr>';
+                    }
+                },
+                
+                // Atualiza o resumo dos últimos pedidos do cliente atual
+                updateLastOrdersSummary() { 
+                    const container = document.getElementById('last-orders-list');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (!this.currentClient || !this.currentClient.orders || this.currentClient.orders.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500">Nenhum pedido anterior registrado.</p>';
+                        return;
+                    }
+                    // Pega os últimos 3 pedidos e inverte para mostrar o mais recente primeiro
+                    const lastOrders = this.currentClient.orders.slice(-3).reverse(); 
+                    lastOrders.forEach(order => {
+                        const orderDate = new Date(order.date + "T00:00:00").toLocaleDateString('pt-BR'); // Adiciona T00:00:00
+                        const itemsSummary = order.items.map(item => `${item.quantity}x ${item.brand}`).join(', ');
+                        const paymentInfo = order.paymentMethod ? ` - ${order.paymentMethod}` : '';
+                        const p = document.createElement('p');
+                        p.innerHTML = `<strong>${orderDate}:</strong> ${itemsSummary} (R$ ${order.total.toFixed(2)}${paymentInfo})`;
+                        container.appendChild(p);
+                    });
+                },
+
+                // Define o mês padrão para o seletor de relatório (mês atual)
+                setDefaultReportMonth() {
+                    const reportMonthEl = document.getElementById('report-month');
+                    if (reportMonthEl) {
+                        const now = new Date();
+                        reportMonthEl.value = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+                    }
+                },
+
+                // Gera o relatório de vendas para o mês selecionado
+                async generateSalesReport() { 
+                    // USA this.db
+                    if (!this.db) return this.showNotification("Erro: Conexão com a base de dados não estabelecida.", 0);
+                    const monthYear = document.getElementById('report-month').value;
+                    const reportSummaryEl = document.getElementById('sales-report-summary');
+                    const exportBtn = document.getElementById('export-excel-button');
+
+                    if (!monthYear) { // Se nenhum mês/ano selecionado
+                        if(reportSummaryEl) reportSummaryEl.innerHTML = '<p class="text-gray-500">Selecione mês/ano.</p>';
+                        if (this.salesChartInstance) this.salesChartInstance.destroy(); // Limpa gráfico anterior
+                        if(exportBtn) exportBtn.classList.add('hidden');
+                        return;
+                    }
+                    const [year, month] = monthYear.split('-').map(Number);
+                    
+                    this.showNotification("Gerando relatório...", 0);
+                    try {
+                        // Define as datas de início e fim do mês
+                        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+                        const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Último dia do mês
+
+                        // Busca os pedidos no Supabase para o período
+                        const { data: ordersInMonth, error } = await this.db // USA this.db
+                            .from('pedidos')
+                            .select('items, total, date') // Adicionado 'date' para possível agrupamento diário no futuro
+                            .gte('date', startDate)
+                            .lte('date', endDate);
+
+                        if (error) throw error;
+
+                        // Agrupa as vendas por marca
+                        const salesByBrand = {};
+                        this.products.forEach(p => salesByBrand[p.name] = { quantity: 0, totalValue: 0 }); // Inicializa para todas as marcas
+
+                        ordersInMonth.forEach(order => {
+                            order.items.forEach(item => {
+                                if (salesByBrand[item.brand]) { // Se a marca existe na lista de produtos
+                                    salesByBrand[item.brand].quantity += item.quantity;
+                                    salesByBrand[item.brand].totalValue += item.quantity * item.price;
+                                }
+                            });
+                        });
+
+                        // Filtra apenas marcas com vendas
+                        const reportData = Object.entries(salesByBrand).filter(([_, data]) => data.quantity > 0);
+                        if (reportData.length === 0) { // Se não houver vendas
+                            if(reportSummaryEl) reportSummaryEl.innerHTML = `<p class="text-gray-500">Nenhuma venda em ${month}/${year}.</p>`;
+                            if (this.salesChartInstance) this.salesChartInstance.destroy();
+                            if(exportBtn) exportBtn.classList.add('hidden');
+                            this.showNotification("Relatório gerado. Nenhuma venda no período.", 2000);
+                            return;
+                        }
+
+                        // Cria o resumo em HTML
+                        let summaryHTML = `<h3 class="text-lg font-semibold mb-2">Vendas em ${month}/${year}:</h3><ul class="list-disc list-inside space-y-1">`;
+                        reportData.forEach(([brand, data]) => {
+                            summaryHTML += `<li>${brand}: ${data.quantity} galões (R$ ${data.totalValue.toFixed(2)})</li>`;
+                        });
+                        summaryHTML += '</ul>';
+                        if(reportSummaryEl) reportSummaryEl.innerHTML = summaryHTML;
+                        if(exportBtn) exportBtn.classList.remove('hidden'); // Mostra botão de exportar
+
+                        // Prepara dados para o gráfico
+                        const chartLabels = reportData.map(([brand, _]) => brand);
+                        const chartQuantities = reportData.map(([_, data]) => data.quantity);
+                        const chartValues = reportData.map(([_, data]) => data.totalValue);
+
+                        // Cria ou atualiza o gráfico de vendas
+                        const ctx = document.getElementById('sales-chart').getContext('2d');
+                        if (this.salesChartInstance) this.salesChartInstance.destroy(); // Destrói instância anterior
+                        this.salesChartInstance = new Chart(ctx, {
+                            type: 'bar',
+                            data: { labels: chartLabels, datasets: [
+                                { label: 'Galões Vendidos', data: chartQuantities, backgroundColor: 'rgba(54, 162, 235, 0.6)', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 1, yAxisID: 'yQuantities' },
+                                { label: 'Valor Total (R$)', data: chartValues, backgroundColor: 'rgba(75, 192, 192, 0.6)', borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1, yAxisID: 'yValues' }
+                            ]},
+                            options: { responsive: true, maintainAspectRatio: true, scales: { // Dois eixos Y
+                                yQuantities: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Galões' } },
+                                yValues: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'R$' }, grid: { drawOnChartArea: false } } // Grid do eixo Y de valores desabilitado para não poluir
+                            }}
+                        });
+                        this.showNotification("Relatório gerado.", 2000);
+                    } catch (error) {
+                        console.error('Erro ao gerar relatório de vendas:', error);
+                        this.showNotification(`Erro ao gerar relatório: ${error.message}`);
+                        if(reportSummaryEl) reportSummaryEl.innerHTML = '<p class="text-red-500">Erro ao carregar dados do relatório.</p>';
+                        this.closeModal('notification-modal');
+                    }
+                },
+
+                // Exporta o relatório de vendas para Excel
+                async exportSalesReportToExcel() { 
+                    // USA this.db
+                    if (!this.db) return this.showNotification("Erro: Conexão com a base de dados não estabelecida.", 0);
+                    const monthYear = document.getElementById('report-month').value;
+                    if (!monthYear) return this.showNotification("Selecione o mês para exportar.");
+                    const [year, month] = monthYear.split('-').map(Number);
+                    
+                    this.showNotification("Exportando relatório...", 0);
+                    try {
+                        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+                        const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+                        // Busca os pedidos (apenas os itens são necessários para este relatório)
+                        const { data: ordersInMonth, error } = await this.db // USA this.db
+                            .from('pedidos')
+                            .select('items') // Pega apenas os itens para otimizar
+                            .gte('date', startDate)
+                            .lte('date', endDate);
+
+                        if (error) throw error;
+
+                        // Agrupa as vendas por marca (similar ao generateSalesReport)
+                        const salesByBrand = {};
+                        this.products.forEach(p => salesByBrand[p.name] = { quantity: 0, totalValue: 0 });
+                        ordersInMonth.forEach(order => {
+                            order.items.forEach(item => {
+                                if (salesByBrand[item.brand]) {
+                                    salesByBrand[item.brand].quantity += item.quantity;
+                                    salesByBrand[item.brand].totalValue += item.quantity * item.price;
+                                }
+                            });
+                        });
+
+                        // Prepara os dados para a planilha Excel
+                        const dataForExport = [["Marca", "Galões Vendidos", "Valor Total (R$)"]]; // Cabeçalho
+                        Object.entries(salesByBrand).forEach(([brand, data]) => {
+                            if (data.quantity > 0) dataForExport.push([brand, data.quantity, data.totalValue]);
+                        });
+
+                        if (dataForExport.length <= 1) { // Se só tiver o cabeçalho
+                             this.showNotification("Nenhuma venda para exportar.", 3000);
+                             this.closeModal('notification-modal');
+                             return;
+                        }
+
+                        // Cria a planilha e o arquivo Excel
+                        const ws = XLSX.utils.aoa_to_sheet(dataForExport);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, "RelatorioVendas");
+                        XLSX.writeFile(wb, `Relatorio_Vendas_${year}_${String(month).padStart(2,'0')}.xlsx`);
+                        this.showNotification("Relatório exportado!");
+
+                    } catch (error) {
+                        console.error('Erro ao exportar relatório:', error);
+                        this.showNotification(`Erro ao exportar: ${error.message}`);
+                        this.closeModal('notification-modal');
+                    }
+                },
+
+                // Abre o modal localizador de clientes
+                openLocatorModal() {
+                    document.getElementById('locator-search-term').value = ''; // Limpa busca anterior
+                    document.getElementById('locator-results').innerHTML = '<p class="text-gray-500">Digite para buscar...</p>';
+                    document.getElementById('locator-modal').style.display = 'block';
+                    document.getElementById('locator-search-term').focus(); // Foca no campo de busca
+                },
+
+                // Busca clientes no array local 'this.clients' (usado pelo localizador)
+                searchClientsUniversal() { 
+                    const searchTerm = document.getElementById('locator-search-term').value.toLowerCase().trim();
+                    const resultsContainer = document.getElementById('locator-results');
+                    resultsContainer.innerHTML = ''; // Limpa resultados anteriores
+
+                    if (searchTerm.length < 2) { // Mínimo de 2 caracteres para buscar
+                        resultsContainer.innerHTML = '<p class="text-gray-500">Digite ao menos 2 caracteres.</p>';
+                        return;
+                    }
+                    // Filtra clientes por nome, endereço ou telefone
+                    const foundClients = this.clients.filter(client => 
+                        client.name.toLowerCase().includes(searchTerm) ||
+                        (client.address && client.address.toLowerCase().includes(searchTerm)) || // Verifica se address existe
+                        client.phone.includes(searchTerm.replace(/\D/g, '')) // Busca por telefone sem máscara
+                    );
+
+                    if (foundClients.length === 0) {
+                        resultsContainer.innerHTML = '<p class="text-gray-500">Nenhum cliente encontrado.</p>';
+                        return;
+                    }
+                    // Exibe os clientes encontrados
+                    foundClients.forEach(client => {
+                        const div = document.createElement('div');
+                        div.className = 'p-2 border-b hover:bg-sky-100 cursor-pointer rounded';
+                        div.innerHTML = `
+                            <p class="font-semibold">${client.name}</p>
+                            <p class="text-sm text-gray-600">${client.address || 'Endereço não informado'} - ${this.formatPhone(client.phone)}</p>
+                        `;
+                        // Ao clicar, exibe os detalhes do cliente e fecha o modal
+                        div.onclick = () => {
+                            this.displayClientDetails(client);
+                            this.closeModal('locator-modal');
+                        };
+                        resultsContainer.appendChild(div);
+                    });
+                },
+
+                // Exibe todos os clientes cadastrados na aba "Todos os Clientes"
+                displayAllClients() { 
+                    const listEl = document.getElementById('all-clients-list');
+                    if(!listEl) return;
+                    listEl.innerHTML = ''; // Limpa a lista
+
+                    // Ordena os clientes pela data de cadastro (mais recentes primeiro)
+                    const sortedClients = [...this.clients].sort((a, b) => {
+                        const dateA = a.createdAt ? new Date(a.createdAt) : 0;
+                        const dateB = b.createdAt ? new Date(b.createdAt) : 0;
+                        return dateB - dateA; 
+                    });
+
+                    if (sortedClients.length === 0) {
+                        listEl.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">Nenhum cliente cadastrado.</td></tr>';
+                        return;
+                    }
+
+                    // Cria as linhas da tabela para cada cliente
+                    sortedClients.forEach(client => {
+                        const row = listEl.insertRow();
+                        const createdAtDate = client.createdAt ? new Date(client.createdAt) : null;
+                        const formattedDate = createdAtDate 
+                            ? `${createdAtDate.toLocaleDateString('pt-BR')} ${createdAtDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}`
+                            : 'Data Indisponível';
+
+                        row.innerHTML = `
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">${client.name}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">${client.address || 'N/A'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${this.formatPhone(client.phone)}</td>
+                            `;
+                    });
+                }
+            }; 
+
+            // Inicializa o app após o DOM estar completamente carregado
+            window.app.init();
+
+        }); 
+    </script>
+</body>
+</html>
