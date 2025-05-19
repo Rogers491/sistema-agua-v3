@@ -239,13 +239,6 @@
                         </div>
                     </div>
                     
-                    <div id="overall-last-orders-section" class="card">
-                        <h2 class="text-xl font-semibold text-sky-700 mb-3">Últimos Pedidos Registrados</h2>
-                        <div id="overall-last-orders-list" class="text-sm text-gray-700 space-y-2 max-h-96 overflow-y-auto">
-                            <p class="text-gray-500">Carregando últimos pedidos...</p>
-                        </div>
-                    </div>
-
                     <div id="client-and-order-section" class="hidden space-y-6">
                         <div class="card">
                             <h3 class="text-xl font-semibold text-sky-700 mb-3">Dados do Cliente</h3>
@@ -303,6 +296,13 @@
                                 </button>
                             </div>
                             <textarea id="whatsapp-message-complete" rows="5" class="form-input hidden mt-3" readonly placeholder="Mensagem completa para WhatsApp..."></textarea>
+                        </div>
+                    </div>
+
+                     <div id="overall-last-orders-section" class="card">
+                        <h2 class="text-xl font-semibold text-sky-700 mb-3">Últimos Pedidos Registrados</h2>
+                        <div id="overall-last-orders-list" class="text-sm text-gray-700 space-y-2 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500">Carregando últimos pedidos...</p>
                         </div>
                     </div>
 
@@ -612,8 +612,6 @@
                     const PAGE_SIZE = 1000; 
                     let from = 0;
                     let allClientsData = [];
-                    // Não mostra notificação de "carregando clientes" aqui para não sobrescrever a de "carregando últimos pedidos"
-                    // this.showNotification("Carregando clientes da nuvem...", 0); 
                     try {
                         let hasMore = true;
                         while(hasMore) {
@@ -636,8 +634,8 @@
                         this.clients = allClientsData.map(client => ({
                             ...client,
                             orders: (client.pedidos || []).sort((a, b) => { 
-                                const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00"); // Adiciona T00:00:00 para 'date'
-                                const dateB = b.order_timestamp ? new Date(b.order_timestamp) : new Date(b.date + "T00:00:00");
+                                const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00Z"); 
+                                const dateB = b.order_timestamp ? new Date(b.order_timestamp) : new Date(b.date + "T00:00:00Z");
                                 return dateB - dateA;
                             })
                         }));
@@ -668,7 +666,7 @@
                                 paymentMethod,
                                 cliente:clientes ( name, address ) 
                             `)
-                            .order('order_timestamp', { ascending: false, nullsLast: true }) // Ordena por order_timestamp, nulos por último
+                            .order('order_timestamp', { ascending: false, nullsLast: true }) 
                             .limit(5);
 
                         if (error) {
@@ -684,7 +682,7 @@
 
                         container.innerHTML = ''; 
                         recentOrders.forEach(order => {
-                            const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z"); // Adiciona Z para UTC se for só data
+                            const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z"); 
                             const formattedDateTime = orderDateTime.toLocaleString('pt-BR', {
                                 day: '2-digit', month: '2-digit', year: '2-digit',
                                 hour: '2-digit', minute: '2-digit'
@@ -820,8 +818,8 @@
                         this.closeModal('notification-modal'); 
                         if (foundClient) {
                             foundClient.orders = (foundClient.pedidos || []).sort((a, b) => {
-                                const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00");
-                                const dateB = b.order_timestamp ? new Date(b.order_timestamp) : new Date(b.date + "T00:00:00");
+                                const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00Z");
+                                const dateB = b.order_timestamp ? new Date(b.order_timestamp) : new Date(b.date + "T00:00:00Z");
                                 return dateB - dateA;
                             });
                             delete foundClient.pedidos; 
