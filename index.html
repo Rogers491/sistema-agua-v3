@@ -104,6 +104,13 @@
         .btn-secondary:hover {
             background-color: #059669; /* Tailwind emerald-600 */
         }
+        .btn-success { 
+            background-color: #22c55e; /* Tailwind green-500 */
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #16a34a; /* Tailwind green-600 */
+        }
         .btn-danger {
             background-color: #ef4444; /* Tailwind red-500 */
             color: white;
@@ -189,6 +196,32 @@
             content: ' ▼';
             font-size: 0.7em;
         }
+        #efficient-search-results-tab .result-item {
+            padding: 0.75rem; 
+            border-bottom: 1px solid #e5e7eb; 
+            cursor: default; /* Alterado para default, pois o clique é no botão */
+            transition: background-color 0.2s ease;
+            border-radius: 0.375rem; 
+            margin-bottom: 0.5rem; 
+            display: flex; /* Para alinhar o botão de edição */
+            justify-content: space-between; /* Para alinhar o botão de edição */
+            align-items: center; /* Para alinhar o botão de edição */
+        }
+        #efficient-search-results-tab .result-item:hover {
+            background-color: #e0f2fe; 
+        }
+        #efficient-search-results-tab .result-item:last-child {
+            border-bottom: none;
+        }
+        .edit-client-btn {
+            padding: 0.3rem 0.6rem; /* p-1.5 */
+            background-color: #fbbf24; /* amber-400 */
+            color: #78350f; /* amber-800 */
+        }
+        .edit-client-btn:hover {
+            background-color: #f59e0b; /* amber-500 */
+        }
+
     </style>
 </head>
 <body class="p-2 md:p-6">
@@ -202,6 +235,9 @@
             <nav class="-mb-px flex space-x-1 md:space-x-4 overflow-x-auto pb-1" aria-label="Tabs">
                 <button onclick="app.changeTab('clientes')" class="tab-button active whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
                     Clientes e Pedidos
+                </button>
+                <button onclick="app.changeTab('busca_eficiente')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
+                    Busca Eficiente
                 </button>
                 <button onclick="app.changeTab('todos_clientes')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
                     Todos os Clientes
@@ -222,7 +258,7 @@
             <section id="clientes-tab" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-2 space-y-6">
                     <div class="card">
-                        <h2 class="text-xl font-semibold text-sky-700 mb-4">Buscar Cliente</h2>
+                        <h2 class="text-xl font-semibold text-sky-700 mb-4">Buscar Cliente (Telefone)</h2>
                         <label for="search-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone (busca automática):</label>
                         <div class="flex space-x-2 items-center">
                             <input type="tel" id="search-phone" class="form-input flex-grow" placeholder="(XX) XXXXX-XXXX">
@@ -339,6 +375,21 @@
                 </div>
             </section>
 
+            <section id="busca_eficiente-tab" class="hidden card">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">Busca Eficiente de Clientes</h2>
+                <div class="flex space-x-2 items-center mb-4">
+                    <input type="text" id="efficient-search-term-tab" class="form-input flex-grow" placeholder="Digite nome, endereço, apto, telefone...">
+                    <button onclick="app.searchEfficientlyTab()" class="btn btn-primary">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                        Buscar
+                    </button>
+                </div>
+                <div id="efficient-search-results-tab" class="mt-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                    <p class="text-gray-500 text-sm">Digite um termo de busca e clique em "Buscar".</p>
+                </div>
+            </section>
+
+
             <section id="todos_clientes-tab" class="hidden card">
                 <h2 class="text-xl font-semibold text-sky-700 mb-4">Todos os Clientes Cadastrados</h2>
                 <div class="overflow-x-auto">
@@ -371,6 +422,11 @@
 
             <section id="inativos-tab" class="hidden card">
                 <h2 class="text-xl font-semibold text-sky-700 mb-4">Painel de Clientes Inativos</h2>
+                 <div class="mb-4"> <button onclick="app.exportInactiveClientsToExcel()" class="btn btn-success">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                        Exportar Inativos para Excel
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -391,17 +447,23 @@
             </section>
 
             <section id="relatorios-tab" class="hidden card">
-                <h2 class="text-xl font-semibold text-sky-700 mb-4">Relatório Mensal de Vendas</h2>
-                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
-                    <label for="report-month" class="text-sm font-medium text-gray-700">Mês/Ano:</label>
-                    <input type="month" id="report-month" class="form-input sm:w-auto" value="">
-                    <button onclick="app.generateSalesReport()" class="btn btn-primary">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">Relatório de Vendas</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-4">
+                    <div>
+                        <label for="report-start-date" class="block text-sm font-medium text-gray-700">Data Início:</label>
+                        <input type="date" id="report-start-date" class="form-input mt-1">
+                    </div>
+                    <div>
+                        <label for="report-end-date" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+                        <input type="date" id="report-end-date" class="form-input mt-1">
+                    </div>
+                    <button onclick="app.generateSalesReport()" class="btn btn-primary sm:w-auto w-full">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 19.875v-6.75zM3 8.625c0-.621.504-1.125 1.125-1.125h15.75c.621 0 1.125.504 1.125 1.125v0c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 8.625v0zM3.75 7.5A2.25 2.25 0 016 5.25h12A2.25 2.25 0 0120.25 7.5v0A2.25 2.25 0 0118 9.75H6A2.25 2.25 0 013.75 7.5v0z" /></svg>
                         Gerar Relatório
                     </button>
                 </div>
                 <div id="sales-report-summary" class="mb-4 p-3 border border-gray-200 rounded bg-sky-50">
-                     <p class="text-gray-500">Selecione o mês e clique em "Gerar Relatório".</p>
+                     <p class="text-gray-500">Selecione o período e clique em "Gerar Relatório".</p>
                 </div>
                 <div class="mb-4">
                     <canvas id="sales-chart" height="150"></canvas>
@@ -476,6 +538,31 @@
             </div>
         </div>
 
+        <div id="edit-client-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="app.closeModal('edit-client-modal')">&times;</span>
+                <h3 class="text-xl font-semibold text-sky-700 mb-4">Editar Dados do Cliente</h3>
+                <input type="hidden" id="edit-client-id">
+                <div class="mb-3">
+                    <label for="edit-client-name" class="block text-sm font-medium text-gray-700">Nome:</label>
+                    <input type="text" id="edit-client-name" class="form-input">
+                </div>
+                <div class="mb-3">
+                    <label for="edit-client-address" class="block text-sm font-medium text-gray-700">Endereço:</label>
+                    <input type="text" id="edit-client-address" class="form-input">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-client-phone" class="block text-sm font-medium text-gray-700">Telefone:</label>
+                    <input type="tel" id="edit-client-phone" class="form-input" placeholder="(XX) XXXXX-XXXX">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="app.closeModal('edit-client-modal')" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800">Cancelar</button>
+                    <button onclick="app.saveClientEdits()" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 
     <script>
@@ -525,10 +612,11 @@
                     await this.loadClients(); 
                     await this.loadOverallLastOrders(); 
                     this.changeTab('clientes');
-                    this.setDefaultReportMonth();
+                    this.setDefaultReportDateRange(); 
                     this.setupEventListeners();
                     this.applyPhoneMask(document.getElementById('search-phone'));
                     this.applyPhoneMask(document.getElementById('new-client-phone'));
+                    this.applyPhoneMask(document.getElementById('edit-client-phone')); // Aplicar máscara ao novo campo
                 },
 
                 setupEventListeners() {
@@ -549,11 +637,16 @@
                      if (newClientPhoneInput) {
                         newClientPhoneInput.addEventListener('input', (e) => this.applyPhoneMask(e.target));
                     }
+                     const editClientPhoneInput = document.getElementById('edit-client-phone'); // Listener para o novo campo
+                     if (editClientPhoneInput) {
+                        editClientPhoneInput.addEventListener('input', (e) => this.applyPhoneMask(e.target));
+                    }
                     window.addEventListener('keydown', (event) => {
                         if (event.key === 'Escape') {
                             this.closeModal('notification-modal');
                             this.closeModal('locator-modal');
                             this.closeModal('inactive-client-observation-modal'); 
+                            this.closeModal('edit-client-modal'); // Fechar novo modal de edição
                         }
                     });
                 },
@@ -589,7 +682,7 @@
                 },
 
                 changeTab(tabName) {
-                    ['clientes-tab', 'todos_clientes-tab', 'importar-tab', 'inativos-tab', 'relatorios-tab'].forEach(id => {
+                    ['clientes-tab', 'busca_eficiente-tab', 'todos_clientes-tab', 'importar-tab', 'inativos-tab', 'relatorios-tab'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.classList.add('hidden');
                     });
@@ -600,7 +693,7 @@
                     if (currentButtonEl) currentButtonEl.classList.add('active');
 
                     if (tabName === 'inativos') this.updateInactiveClientsPanel();
-                    if (tabName === 'relatorios') this.generateSalesReport();
+                    if (tabName === 'relatorios') this.generateSalesReport(); 
                     if (tabName === 'todos_clientes') this.displayAllClients(); 
                 },
 
@@ -1259,65 +1352,87 @@
                     });
                 },
 
-                setDefaultReportMonth() {
-                    const reportMonthEl = document.getElementById('report-month');
-                    if (reportMonthEl) {
-                        const now = new Date();
-                        reportMonthEl.value = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+                setDefaultReportDateRange() { 
+                    const startDateEl = document.getElementById('report-start-date');
+                    const endDateEl = document.getElementById('report-end-date');
+                    if (startDateEl && endDateEl) {
+                        const today = new Date();
+                        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                        
+                        startDateEl.value = firstDayOfMonth.toISOString().split('T')[0];
+                        endDateEl.value = today.toISOString().split('T')[0]; 
                     }
                 },
 
                 async generateSalesReport() { 
                     if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
-                    const monthYear = document.getElementById('report-month').value;
+                    
+                    const startDateString = document.getElementById('report-start-date').value;
+                    const endDateString = document.getElementById('report-end-date').value;
+                    
                     const reportSummaryEl = document.getElementById('sales-report-summary');
                     const exportBtn = document.getElementById('export-excel-button');
                     const detailedReportTbody = document.getElementById('detailed-sales-report-tbody');
+                    
                     this.detailedOrdersData = []; 
                     if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="px-3 py-3 text-center text-gray-500">Gerando...</td></tr>';
-                    if (!monthYear) {
-                        if(reportSummaryEl) reportSummaryEl.innerHTML = '<p>Selecione mês/ano.</p>';
+
+                    if (!startDateString || !endDateString) {
+                        if(reportSummaryEl) reportSummaryEl.innerHTML = '<p class="text-gray-500">Por favor, selecione a data de início e fim.</p>';
                         if (this.salesChartInstance) this.salesChartInstance.destroy();
                         if(exportBtn) exportBtn.classList.add('hidden');
-                        if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="px-3 py-3 text-center">Selecione o mês.</td></tr>';
-                        return;
+                        if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="px-3 py-3 text-center">Selecione o período.</td></tr>';
+                        return this.showNotification("Por favor, selecione a data de início e fim para o relatório.", 3000);
                     }
-                    const [year, month] = monthYear.split('-').map(Number);
+                    
+                    const startDate = startDateString; 
+                    const endDate = endDateString;
+
                     this.showNotification("Gerando relatório...", 0);
                     try {
-                        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-                        const endDate = new Date(year, month, 0).toISOString().split('T')[0]; 
-                        const { data: ordersInMonth, error } = await this.db.from('pedidos').select('*, client:clientes(name)')
-                            .gte('date', startDate).lte('date', endDate).order('date', { ascending: true });
+                        const { data: ordersInPeriod, error } = await this.db.from('pedidos')
+                            .select('*, client:clientes(name)')
+                            .gte('date', startDate) 
+                            .lte('date', endDate)
+                            .order('order_timestamp', { ascending: true, nullsLast: true });
                         if (error) throw error;
-                        this.detailedOrdersData = ordersInMonth; 
+                        this.detailedOrdersData = ordersInPeriod; 
+                        
                         if(detailedReportTbody) {
                             detailedReportTbody.innerHTML = ''; 
-                            if (ordersInMonth.length === 0) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum pedido.</td></tr>';
+                            if (ordersInPeriod.length === 0) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum pedido encontrado para este período.</td></tr>';
                             else {
-                                ordersInMonth.forEach(order => {
+                                ordersInPeriod.forEach(order => {
                                     const clientName = order.client ? order.client.name : 'N/A';
-                                    const orderDate = new Date(order.date + "T00:00:00").toLocaleDateString('pt-BR');
+                                    const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z");
+                                    const formattedDateTime = orderDateTime.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
                                     order.items.forEach(item => {
                                         const row = detailedReportTbody.insertRow();
-                                        row.innerHTML = `<td>${orderDate}</td><td>${clientName}</td><td>${item.brand}</td><td>${item.quantity}</td><td>R$ ${(item.price * item.quantity).toFixed(2)}</td><td>${order.paymentMethod}</td>`;
+                                        row.innerHTML = `<td>${formattedDateTime}</td><td>${clientName}</td><td>${item.brand}</td><td>${item.quantity}</td><td>R$ ${(item.price * item.quantity).toFixed(2)}</td><td>${order.paymentMethod}</td>`;
                                     });
                                 });
                             }
                         }
                         const salesByBrand = {}; this.products.forEach(p => salesByBrand[p.name] = { quantity: 0, totalValue: 0 });
-                        ordersInMonth.forEach(order => order.items.forEach(item => { if (salesByBrand[item.brand]) { salesByBrand[item.brand].quantity += item.quantity; salesByBrand[item.brand].totalValue += item.quantity * item.price; }}) );
+                        ordersInPeriod.forEach(order => order.items.forEach(item => { if (salesByBrand[item.brand]) { salesByBrand[item.brand].quantity += item.quantity; salesByBrand[item.brand].totalValue += item.quantity * item.price; }}) );
                         const reportDataForChart = Object.entries(salesByBrand).filter(([_, data]) => data.quantity > 0);
-                        if (reportDataForChart.length === 0 && ordersInMonth.length === 0) {
-                            if(reportSummaryEl) reportSummaryEl.innerHTML = `<p>Nenhuma venda em ${month}/${year}.</p>`;
+                        
+                        const formattedStartDate = new Date(startDate + "T00:00:00").toLocaleDateString('pt-BR');
+                        const formattedEndDate = new Date(endDate + "T00:00:00").toLocaleDateString('pt-BR');
+                        const periodText = `Período: ${formattedStartDate} a ${formattedEndDate}`;
+
+                        if (reportDataForChart.length === 0 && ordersInPeriod.length === 0) {
+                            if(reportSummaryEl) reportSummaryEl.innerHTML = `<p class="text-gray-500">Nenhuma venda no ${periodText}.</p>`;
                             if (this.salesChartInstance) this.salesChartInstance.destroy();
                             if(exportBtn) exportBtn.classList.add('hidden');
-                            this.showNotification("Relatório gerado. Nenhuma venda.", 2000); return;
+                            this.showNotification(`Relatório gerado. Nenhuma venda no ${periodText}.`, 2000); return;
                         }
-                        let summaryHTML = `<h3 class="text-lg font-semibold mb-2">Resumo em ${month}/${year}:</h3><ul>`;
+                        let summaryHTML = `<h3 class="text-lg font-semibold mb-2">Resumo de Vendas (${periodText}):</h3><ul>`;
                         reportDataForChart.forEach(([brand, data]) => summaryHTML += `<li>${brand}: ${data.quantity} galões (R$ ${data.totalValue.toFixed(2)})</li>`);
                         summaryHTML += '</ul>'; if(reportSummaryEl) reportSummaryEl.innerHTML = summaryHTML;
-                        if(exportBtn && (ordersInMonth.length > 0 || reportDataForChart.length > 0) ) exportBtn.classList.remove('hidden');
+                        if(exportBtn && (ordersInPeriod.length > 0 || reportDataForChart.length > 0) ) exportBtn.classList.remove('hidden');
+                        
                         const chartLabels = reportDataForChart.map(([brand, _]) => brand);
                         const chartQuantities = reportDataForChart.map(([_, data]) => data.quantity);
                         const chartValues = reportDataForChart.map(([_, data]) => data.totalValue);
@@ -1335,13 +1450,18 @@
 
                 async exportSalesReportToExcel() { 
                     if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
-                    const monthYear = document.getElementById('report-month').value;
-                    if (!monthYear) return this.showNotification("Selecione o mês.");
+                    const startDateString = document.getElementById('report-start-date').value;
+                    const endDateString = document.getElementById('report-end-date').value;
+
+                    if (!startDateString || !endDateString) {
+                         return this.showNotification("Por favor, gere um relatório com datas selecionadas primeiro.", 3000);
+                    }
+                    
                     this.showNotification("Exportando Excel...", 0);
                     try {
                         const salesByBrand = {}; this.products.forEach(p => salesByBrand[p.name] = { quantity: 0, totalValue: 0 });
                         if (!this.detailedOrdersData || this.detailedOrdersData.length === 0) {
-                            this.showNotification("Nenhum dado para exportar.", 3000); this.closeModal('notification-modal'); return;
+                            this.showNotification("Nenhum dado para exportar. Gere o relatório primeiro.", 3000); this.closeModal('notification-modal'); return;
                         }
                         this.detailedOrdersData.forEach(order => order.items.forEach(item => { if (salesByBrand[item.brand]) { salesByBrand[item.brand].quantity += item.quantity; salesByBrand[item.brand].totalValue += item.quantity * item.price; }}) );
                         const summaryDataForExport = [["Marca", "Galões Vendidos", "Valor Total (R$)"]];
@@ -1349,21 +1469,262 @@
                         const wb = XLSX.utils.book_new();
                         if (summaryDataForExport.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryDataForExport), "Resumo");
                         else XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Nenhum resumo."]]), "Resumo");
-                        const detailedDataForExport = [ ["Data do pedido", "Cliente", "Marca", "Quantidade", "Valor (R$)", "Forma de pagamento"] ];
+                        
+                        const detailedDataForExport = [ ["Data Hora Pedido", "Cliente", "Marca", "Quantidade", "Valor (R$)", "Forma de pagamento"] ];
                         this.detailedOrdersData.forEach(order => {
                             const clientName = order.client ? order.client.name : 'N/A';
-                            const orderDate = new Date(order.date + "T00:00:00").toLocaleDateString('pt-BR');
-                            order.items.forEach(item => detailedDataForExport.push([orderDate, clientName, item.brand, item.quantity, (item.price * item.quantity).toFixed(2), order.paymentMethod]));
+                            const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z");
+                            const formattedDateTime = orderDateTime.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            order.items.forEach(item => detailedDataForExport.push([formattedDateTime, clientName, item.brand, item.quantity, (item.price * item.quantity).toFixed(2), order.paymentMethod]));
                         });
+
                         if (detailedDataForExport.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detailedDataForExport), "Detalhe");
                         else XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Nenhum detalhe."]]), "Detalhe");
-                        const [year, month] = monthYear.split('-').map(Number);
-                        XLSX.writeFile(wb, `Relatorio_Vendas_${year}_${String(month).padStart(2,'0')}.xlsx`);
+                        
+                        const filename = `Relatorio_Vendas_${startDateString}_a_${endDateString}.xlsx`;
+                        XLSX.writeFile(wb, filename);
                         this.showNotification("Relatório exportado!");
                     } catch (error) {
                         this.showNotification(`Erro ao exportar: ${error.message}`);
                     } finally { this.closeModal('notification-modal'); }
                 },
+
+                async exportInactiveClientsToExcel() {
+                    if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
+                    this.showNotification("Gerando relatório de inativos...", 0);
+
+                    const today = new Date();
+                    let clientsToExport = this.clients.map(client => {
+                        let daysInactive = Infinity;
+                        let lastOrderDateStr = 'Nunca comprou';
+                        if (client.lastOrderDate) {
+                            const lastDate = new Date(client.lastOrderDate + "T00:00:00");
+                            daysInactive = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+                            lastOrderDateStr = lastDate.toLocaleDateString('pt-BR');
+                        }
+                        
+                        let statusDescritivo = "Cinza (Nunca Comprou)";
+                        if (client.lastOrderDate) {
+                            if (daysInactive <= 20) statusDescritivo = "Verde (Ativo ≤ 20 dias)";
+                            else if (daysInactive <= 30) statusDescritivo = "Amarelo (Inativo 21-30 dias)";
+                            else statusDescritivo = "Vermelho (Inativo > 30 dias)";
+                        }
+                        return { ...client, daysInactive, lastOrderDateStr, statusDescritivo };
+                    });
+
+                    clientsToExport = clientsToExport.filter(client => client.lastOrderDate === null || client.daysInactive > 0); 
+
+                    clientsToExport.sort((a, b) => {
+                        const daysA = a.daysInactive === Infinity ? -1 : a.daysInactive; 
+                        const daysB = b.daysInactive === Infinity ? -1 : b.daysInactive;
+                        return daysA - daysB;
+                    });
+
+                    if (clientsToExport.length === 0) {
+                        this.showNotification("Nenhum cliente inativo para exportar.", 3000);
+                        this.closeModal('notification-modal');
+                        return;
+                    }
+
+                    const dataForExcel = [
+                        ["Status Descritivo", "Nome", "Endereço", "Telefone", "Dias Sem Comprar", "Observações"]
+                    ];
+
+                    clientsToExport.forEach(client => {
+                        dataForExcel.push([
+                            client.statusDescritivo,
+                            client.name,
+                            client.address || 'N/A',
+                            this.formatPhone(client.phone),
+                            client.daysInactive === Infinity ? 'N/A' : client.daysInactive,
+                            client.observacoes_inativo || ''
+                        ]);
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(dataForExcel);
+                    ws['!cols'] = [ {wch:30}, {wch:30}, {wch:40}, {wch:20}, {wch:15}, {wch:40} ]; 
+
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Clientes Inativos");
+                    XLSX.writeFile(wb, "Relatorio_Clientes_Inativos.xlsx");
+                    this.showNotification("Relatório de clientes inativos exportado!");
+                    this.closeModal('notification-modal');
+                },
+
+                searchEfficientlyTab() {
+                    const searchTermInput = document.getElementById('efficient-search-term-tab');
+                    if (!searchTermInput) return;
+                    const searchTerm = searchTermInput.value.toLowerCase().trim();
+                    
+                    const resultsContainer = document.getElementById('efficient-search-results-tab');
+                    if (!resultsContainer) {
+                        console.error("Elemento 'efficient-search-results-tab' não encontrado.");
+                        return;
+                    }
+                    resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Buscando...</p>';
+
+                    if (searchTerm.length < 2) {
+                        resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Digite ao menos 2 caracteres para buscar.</p>';
+                        return;
+                    }
+
+                    const foundClients = this.clients.filter(client => {
+                        const term = searchTerm;
+                        
+                        const nameMatch = client.name && client.name.toLowerCase().includes(term);
+                        const addressMatch = client.address && client.address.toLowerCase().includes(term);
+                        
+                        let phoneMatch = false;
+                        // Verifica se o termo de busca contém algum dígito antes de tentar fazer match com telefone
+                        if (/\d/.test(term)) { 
+                            const searchPhoneDigits = term.replace(/\D/g, '');
+                            if (searchPhoneDigits.length > 0) { // Só busca por telefone se houver dígitos no termo de busca
+                                const clientPhoneDigits = client.phone ? client.phone.replace(/\D/g, '') : "";
+                                if (clientPhoneDigits && clientPhoneDigits.includes(searchPhoneDigits)) {
+                                    phoneMatch = true;
+                                }
+                            }
+                        }
+                        return nameMatch || addressMatch || phoneMatch;
+                    });
+
+                    this.displayEfficientSearchResultsTab(foundClients, 'efficient-search-results-tab');
+                },
+
+                displayEfficientSearchResultsTab(foundClients, containerId) {
+                    const resultsContainer = document.getElementById(containerId);
+                    if (!resultsContainer) return;
+                    resultsContainer.innerHTML = '';
+
+                    if (foundClients.length === 0) {
+                        resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum cliente encontrado com o termo informado.</p>';
+                        return;
+                    }
+
+                    foundClients.forEach(client => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item'; 
+                        div.innerHTML = `
+                            <div class="flex-grow">
+                                <p class="font-semibold text-sky-700 hover:underline" onclick="app.handleEfficientSearchClientClick('${client.id}')">${client.name}</p>
+                                <p class="text-sm text-gray-600">${client.address || 'Endereço não informado'}</p>
+                                <p class="text-sm text-gray-500">${this.formatPhone(client.phone)}</p>
+                            </div>
+                            <button onclick="app.openEditClientModal('${client.id}')" class="btn btn-sm edit-client-btn ml-2 p-1.5" title="Editar Cliente">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                </svg>
+                            </button>
+                        `;
+                        resultsContainer.appendChild(div);
+                    });
+                },
+                
+                // Nova função para lidar com o clique no nome do cliente na busca eficiente
+                handleEfficientSearchClientClick(clientId) {
+                    const client = this.clients.find(c => c.id === clientId);
+                    if (client) {
+                        this.displayClientDetails(client);
+                        this.changeTab('clientes');
+                        const clientDetailsSection = document.getElementById('client-and-order-section');
+                        if (clientDetailsSection) {
+                            clientDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                },
+
+                // Nova função para abrir o modal de edição de cliente
+                openEditClientModal(clientId) {
+                    const client = this.clients.find(c => c.id === clientId);
+                    if (!client) {
+                        this.showNotification("Cliente não encontrado para edição.", 0);
+                        return;
+                    }
+                    document.getElementById('edit-client-id').value = client.id;
+                    document.getElementById('edit-client-name').value = client.name;
+                    document.getElementById('edit-client-address').value = client.address || '';
+                    document.getElementById('edit-client-phone').value = this.formatPhone(client.phone); // Formata ao preencher
+                    
+                    this.applyPhoneMask(document.getElementById('edit-client-phone')); // Garante que a máscara seja aplicada
+                    document.getElementById('edit-client-modal').style.display = 'block';
+                },
+
+                // Nova função para salvar as edições do cliente
+                async saveClientEdits() {
+                    const clientId = document.getElementById('edit-client-id').value;
+                    const name = document.getElementById('edit-client-name').value.trim();
+                    const address = document.getElementById('edit-client-address').value.trim();
+                    const phone = document.getElementById('edit-client-phone').value.replace(/\D/g, '');
+
+                    if (!name || !phone || (phone.length < 10 && phone.length > 0) || (phone.length > 11) ) { // Validação básica
+                        return this.showNotification("Nome e Telefone (10 ou 11 dígitos) são obrigatórios.");
+                    }
+                    
+                    // Verifica se o telefone (se alterado) já existe em outro cliente
+                    const originalClient = this.clients.find(c => c.id === clientId);
+                    if (originalClient && originalClient.phone !== phone) {
+                        const { data: existingClientWithNewPhone, error: fetchError } = await this.db
+                            .from('clientes')
+                            .select('id')
+                            .eq('phone', phone)
+                            .not('id', 'eq', clientId) // Exclui o próprio cliente da verificação
+                            .maybeSingle();
+
+                        if (fetchError) {
+                            console.error('Erro ao verificar telefone duplicado:', fetchError);
+                            return this.showNotification(`Erro ao verificar telefone: ${fetchError.message}`, 0);
+                        }
+                        if (existingClientWithNewPhone) {
+                            return this.showNotification("Este telefone já está cadastrado para outro cliente.", 0);
+                        }
+                    }
+
+
+                    this.showNotification("Salvando alterações...", 0);
+                    try {
+                        const updatedClientData = { name, address, phone };
+                        const { data, error } = await this.db
+                            .from('clientes')
+                            .update(updatedClientData)
+                            .eq('id', clientId)
+                            .select();
+
+                        if (error) throw error;
+
+                        if (data && data.length > 0) {
+                            // Atualiza na lista local this.clients
+                            const clientIndex = this.clients.findIndex(c => c.id === clientId);
+                            if (clientIndex !== -1) {
+                                this.clients[clientIndex] = { ...this.clients[clientIndex], ...data[0] };
+                            }
+                            this.showNotification("Dados do cliente atualizados com sucesso!", 3000);
+                            this.closeModal('edit-client-modal');
+                            
+                            // Atualiza as visualizações relevantes
+                            this.updateInactiveClientsPanel();
+                            this.displayAllClients();
+                            // Se o cliente editado era o currentClient, atualiza a exibição dele
+                            if (this.currentClient && this.currentClient.id === clientId) {
+                                this.displayClientDetails(this.clients[clientIndex]);
+                            }
+                            // Re-executa a busca eficiente se um termo estiver ativo para atualizar a lista
+                            const currentSearchTerm = document.getElementById('efficient-search-term-tab').value;
+                            if (currentSearchTerm.trim().length >= 2) {
+                                this.searchEfficientlyTab();
+                            }
+                        } else {
+                            throw new Error("Nenhum dado retornado após a atualização.");
+                        }
+
+                    } catch (error) {
+                        console.error('Erro ao salvar alterações do cliente:', error);
+                        this.showNotification(`Erro ao salvar alterações: ${error.message}`, 0);
+                    } finally {
+                        this.closeModal('notification-modal'); // Fecha a notificação de "salvando..."
+                    }
+                },
+
 
                 openLocatorModal() {
                     document.getElementById('locator-search-term').value = '';
