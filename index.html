@@ -147,7 +147,6 @@
         .status-red { background-color: #fee2e2; color: #991b1b; } 
         .status-blue { background-color: #bae6fd; color: #075985; }
 
-
         #simple-whatsapp-container {
             position: sticky;
             top: 20px; 
@@ -239,6 +238,13 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <div id="overall-last-orders-section" class="card">
+                        <h2 class="text-xl font-semibold text-sky-700 mb-3">Últimos Pedidos Registrados</h2>
+                        <div id="overall-last-orders-list" class="text-sm text-gray-700 space-y-2 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500">Carregando últimos pedidos...</p>
+                        </div>
+                    </div>
 
                     <div id="client-and-order-section" class="hidden space-y-6">
                         <div class="card">
@@ -249,9 +255,9 @@
                             <input type="hidden" id="current-client-id">
 
                             <div id="last-orders-summary" class="mt-4 pt-3 border-t border-gray-200">
-                                <h4 class="text-md font-semibold text-gray-600 mb-2">Últimos Pedidos:</h4>
+                                <h4 class="text-md font-semibold text-gray-600 mb-2">Últimos Pedidos (deste cliente):</h4>
                                 <div id="last-orders-list" class="text-sm text-gray-700 space-y-1">
-                                    <p class="text-gray-500">Nenhum pedido anterior registrado.</p>
+                                    <p class="text-gray-500">Nenhum pedido anterior registrado para este cliente.</p>
                                 </div>
                             </div>
                         </div>
@@ -517,6 +523,7 @@
                         return;
                     }
                     await this.loadClients(); 
+                    await this.loadOverallLastOrders(); 
                     this.changeTab('clientes');
                     this.setDefaultReportMonth();
                     this.setupEventListeners();
@@ -605,7 +612,8 @@
                     const PAGE_SIZE = 1000; 
                     let from = 0;
                     let allClientsData = [];
-                    this.showNotification("Carregando clientes da nuvem...", 0);
+                    // Não mostra notificação de "carregando clientes" aqui para não sobrescrever a de "carregando últimos pedidos"
+                    // this.showNotification("Carregando clientes da nuvem...", 0); 
                     try {
                         let hasMore = true;
                         while(hasMore) {
@@ -613,11 +621,12 @@
                                 .from("clientes")
                                 .select( 
                                     `id, name, address, phone, createdAt, lastOrderDate, observacoes_inativo, 
-                                     pedidos:pedidos_client_id_fkey(id, date, items, total, paymentMethod)`
+                                     pedidos:pedidos_client_id_fkey(id, date, items, total, paymentMethod, order_timestamp)` 
                                 )
                                 .range(from, from + PAGE_SIZE - 1)
                                 .order("createdAt", { ascending: false });
                             if (error) {
+                                console.error("Falha ao ler clientes:", error);
                                 this.showNotification(`Falha ao ler clientes: ${error.message}`, 0); return;
                             }
                             if (data) allClientsData.push(...data);
@@ -626,16 +635,78 @@
                         }
                         this.clients = allClientsData.map(client => ({
                             ...client,
-                            orders: (client.pedidos || []).sort((a, b) => new Date(b.date) - new Date(a.date))
+                            orders: (client.pedidos || []).sort((a, b) => { 
+                                const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00"); // Adiciona T00:00:00 para 'date'
+                                const dateB = b.order_timestamp ? new Date(b.order_timestamp) : new Date(b.date + "T00:00:00");
+                                return dateB - dateA;
+                            })
                         }));
-                        this.closeModal('notification-modal'); 
-                        this.showNotification(`Clientes carregados! Total: ${this.clients.length}`, 3000);
+                        console.log(`Clientes carregados! Total: ${this.clients.length}`);
                     } catch (error) {
                         this.showNotification(`Exceção ao carregar clientes: ${error.message}`, 0);
                     }
                     this.updateInactiveClientsPanel();
                     this.displayAllClients();
                 },
+
+                async loadOverallLastOrders() {
+                    const container = document.getElementById('overall-last-orders-list');
+                    if (!container || !this.db) {
+                        if (container) container.innerHTML = '<p class="text-red-500">Erro ao carregar pedidos: Conexão com DB falhou.</p>';
+                        return;
+                    }
+                    container.innerHTML = '<p class="text-gray-500">Carregando últimos pedidos...</p>';
+
+                    try {
+                        const { data: recentOrders, error } = await this.db
+                            .from('pedidos')
+                            .select(`
+                                date, 
+                                order_timestamp, 
+                                items,
+                                total,
+                                paymentMethod,
+                                cliente:clientes ( name, address ) 
+                            `)
+                            .order('order_timestamp', { ascending: false, nullsLast: true }) // Ordena por order_timestamp, nulos por último
+                            .limit(5);
+
+                        if (error) {
+                            console.error("Erro ao buscar últimos pedidos gerais:", error);
+                            container.innerHTML = `<p class="text-red-500">Erro ao carregar pedidos: ${error.message}</p>`;
+                            return;
+                        }
+
+                        if (!recentOrders || recentOrders.length === 0) {
+                            container.innerHTML = '<p class="text-gray-500">Nenhum pedido registrado recentemente.</p>';
+                            return;
+                        }
+
+                        container.innerHTML = ''; 
+                        recentOrders.forEach(order => {
+                            const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z"); // Adiciona Z para UTC se for só data
+                            const formattedDateTime = orderDateTime.toLocaleString('pt-BR', {
+                                day: '2-digit', month: '2-digit', year: '2-digit',
+                                hour: '2-digit', minute: '2-digit'
+                            });
+
+                            const itemsSummary = order.items.map(item => `${item.quantity}x ${item.brand}`).join(', ');
+                            const paymentInfo = order.paymentMethod ? ` – ${order.paymentMethod}` : '';
+                            const clientName = order.cliente ? order.cliente.name : 'Cliente Desconhecido';
+                            const clientAddress = order.cliente ? (order.cliente.address || 'Endereço não informado') : 'N/A';
+                            
+                            const p = document.createElement('p');
+                            p.className = "p-2 border-b border-gray-100"; 
+                            p.innerHTML = `<strong>${formattedDateTime}</strong> - ${clientName} (${clientAddress})<br><em>Itens:</em> ${itemsSummary}<br><em>Total:</em> R$ ${order.total.toFixed(2)}${paymentInfo}`;
+                            container.appendChild(p);
+                        });
+
+                    } catch (err) {
+                        console.error("Exceção ao carregar últimos pedidos gerais:", err);
+                        container.innerHTML = '<p class="text-red-500">Ocorreu um erro inesperado ao carregar os pedidos.</p>';
+                    }
+                },
+
 
                 extractNameAndAddress(nameField) {
                     if (!nameField || typeof nameField !== 'string') return { name: '', address: '' };
@@ -728,7 +799,7 @@
                     document.getElementById('client-and-order-section').classList.add('hidden');
                     document.getElementById('new-client-form-section').classList.add('hidden');
                     document.getElementById('simple-whatsapp-container').classList.add('hidden');
-                    document.getElementById('last-orders-list').innerHTML = '<p class="text-gray-500">Nenhum pedido anterior.</p>';
+                    document.getElementById('last-orders-list').innerHTML = '<p class="text-gray-500">Nenhum pedido anterior para este cliente.</p>'; 
                     document.getElementById('payment-method').value = ''; 
                     this.currentClient = null; this.currentOrder = []; this.renderOrderItems();
                 },
@@ -742,13 +813,17 @@
                     try { 
                         const { data: foundClient, error } = await this.db
                             .from('clientes')
-                            .select(`*, observacoes_inativo, pedidos:pedidos_client_id_fkey(id, date, items, total, paymentMethod)`)
+                            .select(`*, observacoes_inativo, pedidos:pedidos_client_id_fkey(id, date, items, total, paymentMethod, order_timestamp)`) 
                             .eq('phone', phone)
                             .maybeSingle(); 
                         if (error) throw error;
                         this.closeModal('notification-modal'); 
                         if (foundClient) {
-                            foundClient.orders = (foundClient.pedidos || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+                            foundClient.orders = (foundClient.pedidos || []).sort((a, b) => {
+                                const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00");
+                                const dateB = b.order_timestamp ? new Date(b.order_timestamp) : new Date(b.date + "T00:00:00");
+                                return dateB - dateA;
+                            });
                             delete foundClient.pedidos; 
                             this.displayClientDetails(foundClient); 
                             newClientBtnContainer.classList.add('hidden');
@@ -899,10 +974,14 @@
                     if (!paymentMethod) return this.showNotification("Selecione a forma de pagamento.");
                     this.showNotification("Finalizando pedido...", 0);
                     try {
+                        const now = new Date();
                         const orderDataToSave = {
-                            client_id: this.currentClient.id, date: new Date().toISOString().split('T')[0],
+                            client_id: this.currentClient.id, 
+                            date: now.toISOString().split('T')[0], 
+                            order_timestamp: now.toISOString(), 
                             items: validItems.map(item => ({ brand: item.brand, quantity: item.quantity, price: item.price })), 
-                            total: parseFloat(document.getElementById('order-total').textContent), paymentMethod: paymentMethod 
+                            total: parseFloat(document.getElementById('order-total').textContent), 
+                            paymentMethod: paymentMethod 
                         };
                         const { data: insertedOrderArray, error: orderError } = await this.db.from('pedidos').insert([orderDataToSave]).select();
                         if (orderError) throw orderError;
@@ -916,36 +995,36 @@
                         const clientIndex = this.clients.findIndex(c => c.id === this.currentClient.id);
                         if (clientIndex !== -1) this.clients[clientIndex] = { ...this.currentClient }; 
                         this.showNotification("Pedido finalizado e salvo!");
-                        this.updateInactiveClientsPanel(); this.updateLastOrdersSummary(); this.generateWhatsAppMessage(true); 
+                        this.updateInactiveClientsPanel(); 
+                        this.updateLastOrdersSummary(); 
+                        this.generateWhatsAppMessage(true); 
+                        await this.loadOverallLastOrders(); 
                     } catch (error) {
                         this.showNotification(`Erro ao finalizar: ${error.message}`); this.closeModal('notification-modal');
                     }
                 },
                 
-                // Modificado para retornar "Sr" ou "Sra" sem ponto.
                 getSalutation(name) {
                     if (!name || typeof name !== 'string' || name.trim() === '') return "Prezado(a)";
                     const firstName = name.split(' ')[0].toLowerCase();
-                    const feminineNames = ['ana', 'maria', 'julia', 'laura', 'sofia', 'helena', 'manuela', 'isabela', 'alice', 'beatriz', 'clara', 'eloa', 'giulia', 'isadora', 'livia', 'lorena', 'luiza', 'mariana', 'melissa', 'valentina', 'yasmin', 'bianca']; // Adicionado Bianca para exemplo
-                    // Considera nomes femininos comuns ou que terminam com 'a' (com algumas exceções se necessário)
-                    if (feminineNames.some(n => firstName.includes(n)) || (firstName.length > 1 && firstName.endsWith('a') && firstName !== 'joa' /* Adicionar outras exceções masculinas terminadas em 'a' aqui se necessário */)) {
+                    const feminineNames = ['ana', 'maria', 'julia', 'laura', 'sofia', 'helena', 'manuela', 'isabela', 'alice', 'beatriz', 'clara', 'eloa', 'giulia', 'isadora', 'livia', 'lorena', 'luiza', 'mariana', 'melissa', 'valentina', 'yasmin', 'bianca']; 
+                    if (feminineNames.some(n => firstName.includes(n)) || (firstName.length > 1 && firstName.endsWith('a') && firstName !== 'joa')) {
                         return "Sra"; 
                     }
                     return "Sr"; 
                 },
 
-                // Modificado para incluir saudação e ajustar separadores
                 generateSimpleWhatsAppMessage() {
                     const el = document.getElementById('whatsapp-message-simple'); if (!el) return;
                     if (!this.currentClient) { el.value = ''; return; }
 
                     const salutation = this.getSalutation(this.currentClient.name);
-                    let clientInfo = `${salutation} ${this.currentClient.name}`; // Saudação + Nome
+                    let clientInfo = `${salutation} ${this.currentClient.name}`; 
 
                     if (this.currentClient.address && this.currentClient.address !== 'Endereço não especificado') {
-                        clientInfo += ` - ${this.currentClient.address}`; // Separador " - " para endereço
+                        clientInfo += ` - ${this.currentClient.address}`; 
                     }
-                    clientInfo += ` – ${this.formatPhone(this.currentClient.phone)}`; // Separador " – " para telefone (mantido)
+                    clientInfo += ` – ${this.formatPhone(this.currentClient.phone)}`; 
 
                     const validItems = this.currentOrder.filter(item => item.brand && item.quantity > 0);
                     let orderInfo = "";
@@ -955,9 +1034,6 @@
                         let paymentMethod = document.getElementById('payment-method').value;
                         
                         let paymentMethodText = paymentMethod;
-                        if (paymentMethod === "Pago Antecipadamente") {
-                            paymentMethodText = "Pago Antecipadamente"; 
-                        }
                         
                         orderInfo = `${itemsSummary} – R$ ${orderTotal.toFixed(2)}`;
                         if (paymentMethod) orderInfo += ` – ${paymentMethodText}`;
@@ -985,7 +1061,7 @@
                     if (!navigator.clipboard) {
                         this.showNotification("Falha ao copiar: API de Clipboard não suportada.", 0);
                         console.warn("Clipboard API não disponível. Tente copiar manualmente.");
-                        try { // Fallback para document.execCommand para navegadores mais antigos (embora obsoleto)
+                        try { 
                             const successful = document.execCommand('copy');
                             if (successful) {
                                 this.showNotification("Mensagem rápida copiada (método alternativo)!");
@@ -1015,25 +1091,20 @@
                     const itemsSummary = validItems.map(item => `${item.quantity}x ${item.brand}`).join(', ');
                     
                     let paymentMethod = "";
-                    let paymentMethodText = "";
-
                     if (isFinalized && this.currentClient.orders && this.currentClient.orders.length > 0) {
                         paymentMethod = this.currentClient.orders[0].paymentMethod || "";
                     } else {
                         paymentMethod = document.getElementById('payment-method').value || "";
                     }
 
-                    paymentMethodText = paymentMethod; // Usa o valor direto salvo/selecionado
-                    // A exibição de "Pago Antecipadamente" já está correta se esse for o valor.
-
                     let message = `Cliente : ${this.currentClient.name}\n`;
                     message += `Endereço: ${this.currentClient.address || 'N/A'}\n`;
                     if (itemsSummary) {
                         message += `Pedido : ${itemsSummary}\nTotal : R$ ${total.toFixed(2)}\n`;
-                        if (paymentMethod) message += `Pagamento: ${paymentMethodText}`;
+                        if (paymentMethod) message += `Pagamento: ${paymentMethod}`;
                     } else if (isFinalized) { 
                         message += `Pedido : (Sem itens detalhados)\nTotal : R$ ${total.toFixed(2)}\n`;
-                         if (paymentMethod) message += `Pagamento: ${paymentMethodText}`;
+                         if (paymentMethod) message += `Pagamento: ${paymentMethod}`;
                     }
 
                     const textarea = document.getElementById('whatsapp-message-complete');
@@ -1170,18 +1241,22 @@
                     const container = document.getElementById('last-orders-list'); if (!container) return;
                     container.innerHTML = '';
                     if (!this.currentClient || !this.currentClient.orders || this.currentClient.orders.length === 0) {
-                        container.innerHTML = '<p class="text-gray-500">Nenhum pedido anterior.</p>'; return;
+                        container.innerHTML = '<p class="text-gray-500">Nenhum pedido anterior para este cliente.</p>'; return;
                     }
                     const lastOrders = this.currentClient.orders.slice(0, 5); 
                     lastOrders.forEach(order => {
-                        const orderDate = new Date(order.date + "T00:00:00").toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: '2-digit'});
+                        const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z");
+                        const formattedDateTime = orderDateTime.toLocaleString('pt-BR', {
+                            day: '2-digit', month: '2-digit', year: '2-digit',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+
                         const itemsSummary = order.items.map(item => `${item.quantity}x ${item.brand}`).join(', ');
                         let paymentInfo = order.paymentMethod ? ` – ${order.paymentMethod}` : '';
-                        // A exibição de "Pago Antecipadamente" já está correta se esse for o valor salvo.
                         
                         const clientDetails = `${this.currentClient.name}, ${this.currentClient.address || 'Endereço não informado'}`;
                         const p = document.createElement('p');
-                        p.innerHTML = `${orderDate} – ${itemsSummary} – R$ ${order.total.toFixed(2)}${paymentInfo} – ${clientDetails}`;
+                        p.innerHTML = `${formattedDateTime} – ${itemsSummary} – R$ ${order.total.toFixed(2)}${paymentInfo} – ${clientDetails}`;
                         container.appendChild(p);
                     });
                 },
