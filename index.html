@@ -170,6 +170,7 @@
             padding: 0.75rem; 
             text-align: left;
             font-size: 0.875rem; 
+            vertical-align: top; 
         }
         #detailed-sales-report-table th {
             background-color: #f9fafb; 
@@ -181,12 +182,18 @@
         #detailed-sales-report-table tbody tr:nth-child(even) {
             background-color: #f0f9ff; 
         }
+        .client-address-detail { 
+            display: block;
+            font-size: 0.75rem; 
+            color: #6b7280; 
+            margin-top: 0.125rem; 
+        }
         .sortable-header {
             cursor: pointer;
             user-select: none;
         }
         .sortable-header:hover {
-            background-color: #e5e7eb; /* gray-200 */
+            background-color: #e5e7eb; 
         }
         .sort-asc::after {
             content: ' ▲';
@@ -199,13 +206,13 @@
         #efficient-search-results-tab .result-item {
             padding: 0.75rem; 
             border-bottom: 1px solid #e5e7eb; 
-            cursor: default; /* Alterado para default, pois o clique é no botão */
+            cursor: default; 
             transition: background-color 0.2s ease;
             border-radius: 0.375rem; 
             margin-bottom: 0.5rem; 
-            display: flex; /* Para alinhar o botão de edição */
-            justify-content: space-between; /* Para alinhar o botão de edição */
-            align-items: center; /* Para alinhar o botão de edição */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
         }
         #efficient-search-results-tab .result-item:hover {
             background-color: #e0f2fe; 
@@ -213,13 +220,33 @@
         #efficient-search-results-tab .result-item:last-child {
             border-bottom: none;
         }
-        .edit-client-btn {
-            padding: 0.3rem 0.6rem; /* p-1.5 */
-            background-color: #fbbf24; /* amber-400 */
-            color: #78350f; /* amber-800 */
+        .action-btn-group button {
+            margin-left: 0.5rem;
         }
-        .edit-client-btn:hover {
-            background-color: #f59e0b; /* amber-500 */
+        .edit-client-btn, .report-edit-order-btn {
+            padding: 0.3rem 0.6rem; 
+            background-color: #fbbf24; 
+            color: #78350f; 
+        }
+        .edit-client-btn:hover, .report-edit-order-btn:hover {
+            background-color: #f59e0b; 
+        }
+        .delete-client-btn {
+            background-color: #fee2e2; 
+            color: #991b1b; 
+        }
+        .delete-client-btn:hover {
+             background-color: #fca5a5; 
+        }
+        .delete-order-btn {
+            padding: 0.3rem 0.6rem;
+            background-color: #fee2e2; 
+            color: #991b1b; 
+            border: 1px solid #fecaca; 
+        }
+        .delete-order-btn:hover {
+            background-color: #fca5a5; 
+            color: #7f1d1d; 
         }
 
     </style>
@@ -311,7 +338,7 @@
                                         <option value="Dinheiro">Dinheiro</option>
                                         <option value="Pago Antecipadamente">Pago Antecipadamente</option>
                                     </select>
-                                    <button onclick="app.setOrderAsPaid()" class="btn btn-sm bg-teal-500 hover:bg-teal-600 text-white whitespace-nowrap px-3 py-2">
+                                    <button onclick="app.setOrderAsPaid()" class="btn btn-sm btn-success whitespace-nowrap px-3 py-2">
                                         JÁ ESTÁ PAGO
                                     </button>
                                 </div>
@@ -480,10 +507,10 @@
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagamento</th>
-                            </tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th> </tr>
                         </thead>
                         <tbody id="detailed-sales-report-tbody" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="6" class="px-3 py-3 text-center text-gray-500">Nenhum dado detalhado para exibir. Gere o relatório.</td></tr>
+                            <tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">Nenhum dado detalhado para exibir. Gere o relatório.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -561,6 +588,54 @@
                 </div>
             </div>
         </div>
+        
+        <div id="delete-client-confirm-modal" class="modal">
+            <div class="modal-content">
+                <h3 class="text-xl font-semibold text-red-600 mb-4">Confirmar Exclusão</h3>
+                <p id="delete-client-confirm-message" class="text-gray-700 mb-6"></p>
+                <input type="hidden" id="delete-client-confirm-id">
+                <div class="flex justify-end space-x-2">
+                    <button onclick="app.closeModal('delete-client-confirm-modal')" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800">Cancelar</button>
+                    <button id="confirm-delete-action-button" class="btn btn-danger">Apagar</button> </div>
+            </div>
+        </div>
+        
+        <div id="edit-order-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="app.closeModal('edit-order-modal')">&times;</span>
+                <h3 class="text-xl font-semibold text-sky-700 mb-2">Editar Pedido</h3>
+                <input type="hidden" id="edit-order-id">
+                <div class="mb-3 text-sm">
+                    <p><strong>Cliente:</strong> <span id="edit-order-client-name" class="text-gray-700"></span></p>
+                    <p><strong>Endereço:</strong> <span id="edit-order-client-address" class="text-gray-700"></span></p>
+                </div>
+                <div id="edit-order-items-container" class="space-y-3 mb-3 max-h-60 overflow-y-auto p-2 border rounded">
+                    </div>
+                <button onclick="app.addEditOrderItem()" class="btn btn-secondary btn-sm mb-3">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Adicionar Item
+                </button>
+                
+                <div class="mb-3">
+                    <label for="edit-order-payment-method" class="block text-sm font-medium text-gray-700">Forma de Pagamento:</label>
+                    <select id="edit-order-payment-method" class="form-input mt-1">
+                        <option value="">Selecione...</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Pago Antecipadamente">Pago Antecipadamente</option>
+                    </select>
+                </div>
+                <div class="mb-4 pt-3 border-t border-gray-200">
+                    <p class="text-lg font-semibold text-gray-800">Total do Pedido: R$ <span id="edit-order-total" class="text-emerald-600">0.00</span></p>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button onclick="app.closeModal('edit-order-modal')" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800">Cancelar</button>
+                    <button onclick="app.saveOrderEdits()" class="btn btn-primary">Salvar Alterações do Pedido</button>
+                </div>
+            </div>
+        </div>
 
 
     </div>
@@ -598,10 +673,12 @@
                 ],
                 currentOrder: [], 
                 currentClient: null,
+                editingOrder: { id: null, items: [], paymentMethod: '', total: 0, clientId: null, clientName: '', clientAddress: '' },
                 salesChartInstance: null,
                 detailedOrdersData: [],
                 inactiveSortKey: 'daysInactive', 
-                inactiveSortDir: 'desc',      
+                inactiveSortDir: 'desc',
+                debounceTimer: null, 
 
 
                 async init() { 
@@ -609,27 +686,45 @@
                         this.showNotification("Falha crítica na inicialização da base de dados.", 0);
                         return;
                     }
+                    this.showNotification("Carregando dados do sistema...", 0); 
+
                     await this.loadClients(); 
                     await this.loadOverallLastOrders(); 
+
+                    this.closeModal('notification-modal'); 
+                    this.showNotification(`Sistema pronto! ${this.clients.length} clientes carregados.`, 4000);
+
+
                     this.changeTab('clientes');
                     this.setDefaultReportDateRange(); 
                     this.setupEventListeners();
                     this.applyPhoneMask(document.getElementById('search-phone'));
                     this.applyPhoneMask(document.getElementById('new-client-phone'));
-                    this.applyPhoneMask(document.getElementById('edit-client-phone')); // Aplicar máscara ao novo campo
+                    this.applyPhoneMask(document.getElementById('edit-client-phone')); 
                 },
 
                 setupEventListeners() {
                     const searchPhoneInput = document.getElementById('search-phone');
                     if (searchPhoneInput) {
                         searchPhoneInput.addEventListener('input', (e) => {
-                            this.applyPhoneMask(e.target);
+                            this.applyPhoneMask(e.target); 
                             const unmaskedPhone = e.target.value.replace(/\D/g, '');
-                            if (unmaskedPhone.length === 10 || unmaskedPhone.length === 11) {
-                                this.searchClientByPhone(false); 
-                            } else if (unmaskedPhone.length === 0) {
+
+                            clearTimeout(this.debounceTimer); 
+
+                            if (unmaskedPhone.length === 0) {
                                 this.clearClientAndOrderDetails();
-                                document.getElementById('new-client-button-container').classList.add('hidden');
+                                const btnContainer = document.getElementById('new-client-button-container');
+                                if(btnContainer) btnContainer.classList.add('hidden');
+                            } else {
+                                if (unmaskedPhone.length === 10 || unmaskedPhone.length === 11) {
+                                    this.debounceTimer = setTimeout(() => {
+                                        this.searchClientByPhone(false); 
+                                    }, 500); 
+                                } else {
+                                    const btnContainer = document.getElementById('new-client-button-container');
+                                    if(btnContainer) btnContainer.classList.add('hidden');
+                                }
                             }
                         });
                     }
@@ -637,20 +732,66 @@
                      if (newClientPhoneInput) {
                         newClientPhoneInput.addEventListener('input', (e) => this.applyPhoneMask(e.target));
                     }
-                     const editClientPhoneInput = document.getElementById('edit-client-phone'); // Listener para o novo campo
+                     const editClientPhoneInput = document.getElementById('edit-client-phone'); 
                      if (editClientPhoneInput) {
                         editClientPhoneInput.addEventListener('input', (e) => this.applyPhoneMask(e.target));
                     }
+                    ['new-client-name', 'new-client-address', 'edit-client-name', 'edit-client-address'].forEach(id => {
+                        const inputEl = document.getElementById(id);
+                        if (inputEl) {
+                            inputEl.addEventListener('input', (e) => {
+                                e.target.value = this.capitalizeWords(e.target.value);
+                            });
+                        }
+                    });
+
                     window.addEventListener('keydown', (event) => {
                         if (event.key === 'Escape') {
                             this.closeModal('notification-modal');
                             this.closeModal('locator-modal');
                             this.closeModal('inactive-client-observation-modal'); 
-                            this.closeModal('edit-client-modal'); // Fechar novo modal de edição
+                            this.closeModal('edit-client-modal'); 
+                            this.closeModal('delete-client-confirm-modal'); 
+                            this.closeModal('edit-order-modal'); 
                         }
                     });
+
+                    const detailedReportTbody = document.getElementById('detailed-sales-report-tbody');
+                    if (detailedReportTbody) {
+                        detailedReportTbody.addEventListener('click', (event) => {
+                            const targetButton = event.target.closest('button');
+                            if (!targetButton) return;
+
+                            if (targetButton.classList.contains('report-delete-order-btn')) {
+                                const orderId = targetButton.dataset.orderId;
+                                const clientId = targetButton.dataset.clientId;
+                                window.app.openDeleteOrderConfirmModal(orderId, clientId);
+                            } else if (targetButton.classList.contains('report-edit-order-btn')) {
+                                const orderId = targetButton.dataset.orderId;
+                                window.app.openEditOrderModal(orderId);
+                            }
+                        });
+                    }
+
+                    const efficientSearchResultsContainer = document.getElementById('efficient-search-results-tab');
+                    if (efficientSearchResultsContainer) {
+                        efficientSearchResultsContainer.addEventListener('click', (event) => {
+                            const targetButton = event.target.closest('button');
+                            if (!targetButton) return;
+                            
+                            const clientDiv = event.target.closest('.result-item');
+                            if (!clientDiv) return;
+                            // A lógica de clique no nome já está no innerHTML do item.
+                            // Os botões de editar/apagar dentro do item já têm seus próprios onclicks diretos.
+                        });
+                    }
                 },
                 
+                capitalizeWords(str) {
+                    if (!str) return '';
+                    return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+                },
+
                 applyPhoneMask(inputElement) {
                     if (!inputElement) return;
                     let value = inputElement.value.replace(/\D/g, '');
@@ -699,7 +840,6 @@
 
                 async loadClients() {
                     if (!this.db) {
-                        this.showNotification("Erro: cliente Supabase não definido.", 0);
                         return;
                     }
                     const PAGE_SIZE = 1000; 
@@ -712,13 +852,13 @@
                                 .from("clientes")
                                 .select( 
                                     `id, name, address, phone, createdAt, lastOrderDate, observacoes_inativo, 
-                                     pedidos:pedidos_client_id_fkey(id, date, items, total, paymentMethod, order_timestamp)` 
+                                     pedidos:pedidos_client_id_fkey(id, client_id, date, items, total, paymentMethod, order_timestamp)` 
                                 )
                                 .range(from, from + PAGE_SIZE - 1)
                                 .order("createdAt", { ascending: false });
                             if (error) {
                                 console.error("Falha ao ler clientes:", error);
-                                this.showNotification(`Falha ao ler clientes: ${error.message}`, 0); return;
+                                return;
                             }
                             if (data) allClientsData.push(...data);
                             if (!data || data.length < PAGE_SIZE) hasMore = false; 
@@ -732,7 +872,6 @@
                                 return dateB - dateA;
                             })
                         }));
-                        console.log(`Clientes carregados! Total: ${this.clients.length}`);
                     } catch (error) {
                         this.showNotification(`Exceção ao carregar clientes: ${error.message}`, 0);
                     }
@@ -752,12 +891,13 @@
                         const { data: recentOrders, error } = await this.db
                             .from('pedidos')
                             .select(`
+                                id, 
                                 date, 
                                 order_timestamp, 
                                 items,
                                 total,
                                 paymentMethod,
-                                cliente:clientes ( name, address ) 
+                                cliente:clientes ( id, name, address ) 
                             `)
                             .order('order_timestamp', { ascending: false, nullsLast: true }) 
                             .limit(5);
@@ -787,7 +927,7 @@
                             const clientAddress = order.cliente ? (order.cliente.address || 'Endereço não informado') : 'N/A';
                             
                             const p = document.createElement('p');
-                            p.className = "p-2 border-b border-gray-100"; 
+                            p.className = "p-2 border-b border-gray-200/30"; 
                             p.innerHTML = `<strong>${formattedDateTime}</strong> - ${clientName} (${clientAddress})<br><em>Itens:</em> ${itemsSummary}<br><em>Total:</em> R$ ${order.total.toFixed(2)}${paymentInfo}`;
                             container.appendChild(p);
                         });
@@ -897,10 +1037,15 @@
 
                 async searchClientByPhone(showNotFoundNotification = true) { 
                     if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
-                    const phone = document.getElementById('search-phone').value.replace(/\D/g, '');
+                    const phoneInput = document.getElementById('search-phone'); 
+                    if (!phoneInput) return; 
+                    const phone = phoneInput.value.replace(/\D/g, ''); 
+
                     const newClientBtnContainer = document.getElementById('new-client-button-container');
                     if (!phone && showNotFoundNotification) return this.showNotification("Digite um telefone.");
-                    this.showNotification("Buscando cliente...", 0);
+                    
+                    if (showNotFoundNotification) this.showNotification("Buscando cliente...", 0); 
+                    
                     try { 
                         const { data: foundClient, error } = await this.db
                             .from('clientes')
@@ -908,7 +1053,9 @@
                             .eq('phone', phone)
                             .maybeSingle(); 
                         if (error) throw error;
-                        this.closeModal('notification-modal'); 
+                        
+                        if (showNotFoundNotification) this.closeModal('notification-modal'); 
+                        
                         if (foundClient) {
                             foundClient.orders = (foundClient.pedidos || []).sort((a, b) => {
                                 const dateA = a.order_timestamp ? new Date(a.order_timestamp) : new Date(a.date + "T00:00:00Z");
@@ -917,19 +1064,26 @@
                             });
                             delete foundClient.pedidos; 
                             this.displayClientDetails(foundClient); 
-                            newClientBtnContainer.classList.add('hidden');
+                            if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                             document.getElementById('new-client-form-section').classList.add('hidden');
                         } else {
-                            this.clearClientAndOrderDetails(); 
-                            if (phone.length >= 10) { 
-                                 newClientBtnContainer.classList.remove('hidden');
-                                 if (showNotFoundNotification) this.showNotification("Cliente não encontrado.");
-                            } else {
-                                newClientBtnContainer.classList.add('hidden');
+                            if (showNotFoundNotification) { 
+                                this.clearClientAndOrderDetails(); 
+                                if (phone.length >= 10) { 
+                                    if(newClientBtnContainer) newClientBtnContainer.classList.remove('hidden');
+                                    this.showNotification("Cliente não encontrado.");
+                                } else {
+                                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                                }
+                            } else if (phone.length >=10 && !foundClient) { 
+                                if(newClientBtnContainer) newClientBtnContainer.classList.remove('hidden');
+                            } else { 
+                                 if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                             }
                         }
                     } catch (error) {
-                        this.showNotification(`Erro ao buscar: ${error.message}`); this.closeModal('notification-modal');
+                        this.showNotification(`Erro ao buscar: ${error.message}`); 
+                        if (showNotFoundNotification) this.closeModal('notification-modal');
                     }
                 },
 
@@ -960,8 +1114,14 @@
 
                 async saveNewClientAndProceedToOrder() {
                     if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
-                    const name = document.getElementById('new-client-name').value.trim();
-                    const address = document.getElementById('new-client-address').value.trim();
+                    const nameInput = document.getElementById('new-client-name');
+                    const addressInput = document.getElementById('new-client-address');
+                    let name = nameInput.value.trim();
+                    let address = addressInput.value.trim();
+                    
+                    name = this.capitalizeWords(name);
+                    address = this.capitalizeWords(address);
+
                     const phone = document.getElementById('new-client-phone').value.replace(/\D/g, '');
                     if (!name || !phone || (phone.length < 10)) return this.showNotification("Nome e Telefone são obrigatórios.");
                     this.showNotification("Salvando cliente...", 0);
@@ -1085,7 +1245,7 @@
                         this.currentClient.orders.unshift(insertedOrder); 
                         const clientIndex = this.clients.findIndex(c => c.id === this.currentClient.id);
                         if (clientIndex !== -1) this.clients[clientIndex] = { ...this.currentClient }; 
-                        this.showNotification("Pedido finalizado e salvo!");
+                        this.showNotification("Pedido finalizado e salvo!", 3000);
                         this.updateInactiveClientsPanel(); 
                         this.updateLastOrdersSummary(); 
                         this.generateWhatsAppMessage(true); 
@@ -1369,48 +1529,86 @@
                     
                     const startDateString = document.getElementById('report-start-date').value;
                     const endDateString = document.getElementById('report-end-date').value;
+                    console.log("[DEBUG] Relatório - Data Início Selecionada:", startDateString, "Data Fim Selecionada:", endDateString); 
                     
                     const reportSummaryEl = document.getElementById('sales-report-summary');
                     const exportBtn = document.getElementById('export-excel-button');
                     const detailedReportTbody = document.getElementById('detailed-sales-report-tbody');
                     
                     this.detailedOrdersData = []; 
-                    if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="px-3 py-3 text-center text-gray-500">Gerando...</td></tr>';
+                    if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="7" class="px-3 py-3 text-center text-gray-500">Gerando...</td></tr>';
 
                     if (!startDateString || !endDateString) {
                         if(reportSummaryEl) reportSummaryEl.innerHTML = '<p class="text-gray-500">Por favor, selecione a data de início e fim.</p>';
                         if (this.salesChartInstance) this.salesChartInstance.destroy();
                         if(exportBtn) exportBtn.classList.add('hidden');
-                        if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="px-3 py-3 text-center">Selecione o período.</td></tr>';
+                        if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="7" class="px-3 py-3 text-center">Selecione o período.</td></tr>';
                         return this.showNotification("Por favor, selecione a data de início e fim para o relatório.", 3000);
                     }
                     
-                    const startDate = startDateString; 
-                    const endDate = endDateString;
+                    let query = this.db.from('pedidos')
+                        .select('id, client_id, date, order_timestamp, items, total, paymentMethod, cliente:clientes(id, name, address)') 
+                        .order('order_timestamp', { ascending: true, nullsLast: true });
+
+                    if (startDateString === endDateString) {
+                        console.log("[DEBUG] Filtro EQ para data:", startDateString);
+                        query = query.eq('date', startDateString);
+                    } else {
+                        console.log("[DEBUG] Filtro GTE/LTE para datas:", startDateString, endDateString);
+                        query = query.gte('date', startDateString).lte('date', endDateString);
+                    }
 
                     this.showNotification("Gerando relatório...", 0);
                     try {
-                        const { data: ordersInPeriod, error } = await this.db.from('pedidos')
-                            .select('*, client:clientes(name)')
-                            .gte('date', startDate) 
-                            .lte('date', endDate)
-                            .order('order_timestamp', { ascending: true, nullsLast: true });
+                        const { data: ordersInPeriod, error } = await query;
+                        console.log("[DEBUG] Pedidos retornados do Supabase para relatório:", JSON.stringify(ordersInPeriod, null, 2)); 
+
                         if (error) throw error;
                         this.detailedOrdersData = ordersInPeriod; 
                         
                         if(detailedReportTbody) {
                             detailedReportTbody.innerHTML = ''; 
-                            if (ordersInPeriod.length === 0) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum pedido encontrado para este período.</td></tr>';
-                            else {
+                            if (!ordersInPeriod || ordersInPeriod.length === 0) { 
+                                detailedReportTbody.innerHTML = '<tr><td colspan="7" class="text-center px-3 py-3 text-gray-500">Nenhum pedido encontrado para este período.</td></tr>';
+                            } else {
                                 ordersInPeriod.forEach(order => {
-                                    const clientName = order.client ? order.client.name : 'N/A';
+                                    const clientName = order.cliente ? order.cliente.name : 'N/A';
+                                    const clientAddress = order.cliente ? (order.cliente.address || 'N/A') : 'N/A'; 
                                     const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z");
                                     const formattedDateTime = orderDateTime.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-                                    order.items.forEach(item => {
-                                        const row = detailedReportTbody.insertRow();
-                                        row.innerHTML = `<td>${formattedDateTime}</td><td>${clientName}</td><td>${item.brand}</td><td>${item.quantity}</td><td>R$ ${(item.price * item.quantity).toFixed(2)}</td><td>${order.paymentMethod}</td>`;
-                                    });
+                                    // Cria uma linha para cada pedido, não para cada item
+                                    const row = detailedReportTbody.insertRow();
+                                    const itemsSummary = order.items.map(item => `${item.quantity}x ${item.brand}`).join(', ');
+                                    
+                                    row.innerHTML = `
+                                        <td>${formattedDateTime}</td>
+                                        <td>
+                                            ${clientName}
+                                            <span class="client-address-detail">${clientAddress}</span>
+                                        </td>
+                                        <td>${itemsSummary}</td> <td>${order.items.reduce((sum, i) => sum + i.quantity, 0)}</td> <td>R$ ${order.total.toFixed(2)}</td>
+                                        <td>${order.paymentMethod}</td>
+                                        <td class="action-btn-group">
+                                            <button class="btn btn-sm report-edit-order-btn" 
+                                                    data-order-id="${order.id}"
+                                                    title="Editar Pedido">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square icon-sm" viewBox="0 0 16 16">
+                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                                </svg>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-order-btn report-delete-order-btn" 
+                                                    data-order-id="${order.id}" 
+                                                    data-client-id="${order.cliente ? order.cliente.id : 'null'}" 
+                                                    title="Apagar Pedido">
+                                                <svg class="icon -mr-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    `;
                                 });
                             }
                         }
@@ -1418,8 +1616,8 @@
                         ordersInPeriod.forEach(order => order.items.forEach(item => { if (salesByBrand[item.brand]) { salesByBrand[item.brand].quantity += item.quantity; salesByBrand[item.brand].totalValue += item.quantity * item.price; }}) );
                         const reportDataForChart = Object.entries(salesByBrand).filter(([_, data]) => data.quantity > 0);
                         
-                        const formattedStartDate = new Date(startDate + "T00:00:00").toLocaleDateString('pt-BR');
-                        const formattedEndDate = new Date(endDate + "T00:00:00").toLocaleDateString('pt-BR');
+                        const formattedStartDate = new Date(startDateString + "T00:00:00").toLocaleDateString('pt-BR');
+                        const formattedEndDate = new Date(endDateString + "T00:00:00").toLocaleDateString('pt-BR');
                         const periodText = `Período: ${formattedStartDate} a ${formattedEndDate}`;
 
                         if (reportDataForChart.length === 0 && ordersInPeriod.length === 0) {
@@ -1443,10 +1641,104 @@
                     } catch (error) {
                         this.showNotification(`Erro ao gerar relatório: ${error.message}`);
                         if(reportSummaryEl) reportSummaryEl.innerHTML = '<p class="text-red-500">Erro nos dados.</p>';
-                        if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="6" class="text-red-500">Erro nos dados.</td></tr>';
+                        if(detailedReportTbody) detailedReportTbody.innerHTML = '<tr><td colspan="7" class="text-red-500">Erro nos dados.</td></tr>';
                         this.closeModal('notification-modal');
                     }
                 },
+                
+                openDeleteOrderConfirmModal(orderId, clientId) {
+                    const orderToDelete = this.detailedOrdersData.find(o => String(o.id) === String(orderId));
+                    if (!orderToDelete) return;
+                    const clientName = orderToDelete.cliente ? orderToDelete.cliente.name : "Cliente Desconhecido";
+                    const orderDate = new Date(orderToDelete.order_timestamp || orderToDelete.date + "T00:00:00Z").toLocaleDateString('pt-BR');
+                    
+                    document.getElementById('delete-client-confirm-message').textContent = `Tem certeza que deseja apagar o pedido de ${clientName} do dia ${orderDate}? Esta ação não pode ser desfeita.`;
+                    document.getElementById('delete-client-confirm-id').value = JSON.stringify({orderId, clientId}); 
+                    const confirmButton = document.getElementById('confirm-delete-action-button');
+                    confirmButton.textContent = "Apagar Pedido";
+                    confirmButton.onclick = () => this.confirmDeleteOrder(); 
+                    document.getElementById('delete-client-confirm-modal').style.display = 'block';
+                },
+                
+                async confirmDeleteOrder() {
+                    const idsString = document.getElementById('delete-client-confirm-id').value;
+                    if (!idsString) return;
+                    const ids = JSON.parse(idsString);
+                    this.closeModal('delete-client-confirm-modal');
+                    await this.deleteOrderFromReport(ids.orderId, ids.clientId);
+                },
+
+
+                async deleteOrderFromReport(orderId, clientId) {
+                    console.log(`[DEBUG] deleteOrderFromReport INICIADA. orderId: '${orderId}', clientId: '${clientId}'`);
+                    
+                    if (!this.db) {
+                        console.error("[DEBUG] Conexão com DB não estabelecida em deleteOrderFromReport.");
+                        return this.showNotification("Erro: Conexão não estabelecida.", 0);
+                    }
+                    
+                    if (!orderId || orderId === 'undefined' || orderId === 'null') {
+                        console.error(`[DEBUG] orderId inválido: ${orderId}`);
+                        return this.showNotification("Erro: ID do pedido inválido para exclusão.", 0);
+                    }
+                     
+                    if (!clientId || clientId === 'undefined' || clientId === 'null' || clientId === 'N/A') { 
+                        console.warn(`[DEBUG] clientId inválido ou nulo: ${clientId} para orderId: ${orderId}. A atualização de lastOrderDate pode não ocorrer ou ser imprecisa.`);
+                    }
+                    
+                    this.showNotification("Apagando pedido...", 0); 
+                    try {
+                        const { error: deleteError } = await this.db
+                            .from('pedidos')
+                            .delete()
+                            .eq('id', orderId);
+
+                        if (deleteError) throw deleteError;
+
+                        if (clientId && clientId !== 'null' && clientId !== 'undefined' && clientId !== 'N/A') {
+                            const clientToUpdate = this.clients.find(c => String(c.id) === String(clientId)); 
+                            if (clientToUpdate) {
+                                clientToUpdate.orders = clientToUpdate.orders.filter(o => String(o.id) !== String(orderId));
+                                
+                                let newLastOrderDate = null;
+                                if (clientToUpdate.orders.length > 0) {
+                                    clientToUpdate.orders.sort((a,b) => new Date(b.order_timestamp || b.date + "T00:00:00Z") - new Date(a.order_timestamp || a.date + "T00:00:00Z"));
+                                    newLastOrderDate = clientToUpdate.orders[0].date; 
+                                }
+                                
+                                const { error: updateClientError } = await this.db
+                                    .from('clientes')
+                                    .update({ lastOrderDate: newLastOrderDate })
+                                    .eq('id', clientId);
+
+                                if (updateClientError) {
+                                    console.error("Erro ao atualizar lastOrderDate do cliente:", updateClientError);
+                                } else {
+                                    clientToUpdate.lastOrderDate = newLastOrderDate; 
+                                }
+                            } else {
+                                console.warn(`[DEBUG] Cliente com ID ${clientId} não encontrado na lista local this.clients.`);
+                            }
+                        }
+
+
+                        this.showNotification("Pedido apagado com sucesso!", 3000);
+                        
+                        await this.loadClients(); 
+                        await this.loadOverallLastOrders(); 
+                        this.generateSalesReport(); 
+                        this.updateInactiveClientsPanel(); 
+                        if (this.currentClient && String(this.currentClient.id) === String(clientId)) {
+                            this.updateLastOrdersSummary(); 
+                        }
+
+
+                    } catch (error) {
+                        console.error('Erro ao apagar pedido:', error);
+                        this.showNotification(`Erro ao apagar pedido: ${error.message}`, 0);
+                    } 
+                },
+
 
                 async exportSalesReportToExcel() { 
                     if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
@@ -1470,12 +1762,13 @@
                         if (summaryDataForExport.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryDataForExport), "Resumo");
                         else XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Nenhum resumo."]]), "Resumo");
                         
-                        const detailedDataForExport = [ ["Data Hora Pedido", "Cliente", "Marca", "Quantidade", "Valor (R$)", "Forma de pagamento"] ];
+                        const detailedDataForExport = [ ["Data Hora Pedido", "Cliente", "Endereço Cliente", "Marca", "Quantidade", "Valor (R$)", "Forma de pagamento"] ]; 
                         this.detailedOrdersData.forEach(order => {
-                            const clientName = order.client ? order.client.name : 'N/A';
+                            const clientName = order.cliente ? order.cliente.name : 'N/A';
+                            const clientAddress = order.cliente ? (order.cliente.address || 'N/A') : 'N/A'; 
                             const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z");
                             const formattedDateTime = orderDateTime.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                            order.items.forEach(item => detailedDataForExport.push([formattedDateTime, clientName, item.brand, item.quantity, (item.price * item.quantity).toFixed(2), order.paymentMethod]));
+                            order.items.forEach(item => detailedDataForExport.push([formattedDateTime, clientName, clientAddress, item.brand, item.quantity, (item.price * item.quantity).toFixed(2), order.paymentMethod]));
                         });
 
                         if (detailedDataForExport.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detailedDataForExport), "Detalhe");
@@ -1569,17 +1862,24 @@
                     }
 
                     const foundClients = this.clients.filter(client => {
-                        const term = searchTerm;
+                        const term = searchTerm; 
                         
-                        const nameMatch = client.name && client.name.toLowerCase().includes(term);
-                        const addressMatch = client.address && client.address.toLowerCase().includes(term);
+                        let nameMatch = false;
+                        if (client.name && typeof client.name === 'string') {
+                            nameMatch = client.name.toLowerCase().includes(term);
+                        }
+                        
+                        let addressMatch = false;
+                        if (client.address && typeof client.address === 'string') {
+                            addressMatch = client.address.toLowerCase().includes(term);
+                        }
                         
                         let phoneMatch = false;
-                        // Verifica se o termo de busca contém algum dígito antes de tentar fazer match com telefone
                         if (/\d/.test(term)) { 
                             const searchPhoneDigits = term.replace(/\D/g, '');
-                            if (searchPhoneDigits.length > 0) { // Só busca por telefone se houver dígitos no termo de busca
-                                const clientPhoneDigits = client.phone ? client.phone.replace(/\D/g, '') : "";
+                            if (searchPhoneDigits.length > 0) { 
+                                const clientPhoneString = client.phone ? String(client.phone) : "";
+                                const clientPhoneDigits = clientPhoneString.replace(/\D/g, '');
                                 if (clientPhoneDigits && clientPhoneDigits.includes(searchPhoneDigits)) {
                                     phoneMatch = true;
                                 }
@@ -1610,18 +1910,25 @@
                                 <p class="text-sm text-gray-600">${client.address || 'Endereço não informado'}</p>
                                 <p class="text-sm text-gray-500">${this.formatPhone(client.phone)}</p>
                             </div>
-                            <button onclick="app.openEditClientModal('${client.id}')" class="btn btn-sm edit-client-btn ml-2 p-1.5" title="Editar Cliente">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                </svg>
-                            </button>
+                            <div class="action-btn-group flex items-center">
+                                <button onclick="app.openEditClientModal('${client.id}')" class="btn btn-sm edit-client-btn" title="Editar Cliente">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square icon-sm" viewBox="0 0 16 16">
+                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="app.openDeleteClientConfirmModal('${client.id}', '${client.name.replace(/'/g, "\\'")}')" class="btn btn-sm delete-client-btn" title="Apagar Cliente">
+                                    <svg class="icon -mr-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         `;
                         resultsContainer.appendChild(div);
                     });
                 },
                 
-                // Nova função para lidar com o clique no nome do cliente na busca eficiente
                 handleEfficientSearchClientClick(clientId) {
                     const client = this.clients.find(c => c.id === clientId);
                     if (client) {
@@ -1634,7 +1941,6 @@
                     }
                 },
 
-                // Nova função para abrir o modal de edição de cliente
                 openEditClientModal(clientId) {
                     const client = this.clients.find(c => c.id === clientId);
                     if (!client) {
@@ -1644,31 +1950,33 @@
                     document.getElementById('edit-client-id').value = client.id;
                     document.getElementById('edit-client-name').value = client.name;
                     document.getElementById('edit-client-address').value = client.address || '';
-                    document.getElementById('edit-client-phone').value = this.formatPhone(client.phone); // Formata ao preencher
+                    document.getElementById('edit-client-phone').value = this.formatPhone(client.phone); 
                     
-                    this.applyPhoneMask(document.getElementById('edit-client-phone')); // Garante que a máscara seja aplicada
+                    this.applyPhoneMask(document.getElementById('edit-client-phone')); 
                     document.getElementById('edit-client-modal').style.display = 'block';
                 },
 
-                // Nova função para salvar as edições do cliente
                 async saveClientEdits() {
                     const clientId = document.getElementById('edit-client-id').value;
-                    const name = document.getElementById('edit-client-name').value.trim();
-                    const address = document.getElementById('edit-client-address').value.trim();
+                    let name = document.getElementById('edit-client-name').value.trim();
+                    let address = document.getElementById('edit-client-address').value.trim();
                     const phone = document.getElementById('edit-client-phone').value.replace(/\D/g, '');
 
-                    if (!name || !phone || (phone.length < 10 && phone.length > 0) || (phone.length > 11) ) { // Validação básica
+                    name = this.capitalizeWords(name);
+                    address = this.capitalizeWords(address);
+
+
+                    if (!name || !phone || (phone.length < 10 && phone.length > 0) || (phone.length > 11) ) { 
                         return this.showNotification("Nome e Telefone (10 ou 11 dígitos) são obrigatórios.");
                     }
                     
-                    // Verifica se o telefone (se alterado) já existe em outro cliente
                     const originalClient = this.clients.find(c => c.id === clientId);
                     if (originalClient && originalClient.phone !== phone) {
                         const { data: existingClientWithNewPhone, error: fetchError } = await this.db
                             .from('clientes')
                             .select('id')
                             .eq('phone', phone)
-                            .not('id', 'eq', clientId) // Exclui o próprio cliente da verificação
+                            .not('id', 'eq', clientId) 
                             .maybeSingle();
 
                         if (fetchError) {
@@ -1693,7 +2001,6 @@
                         if (error) throw error;
 
                         if (data && data.length > 0) {
-                            // Atualiza na lista local this.clients
                             const clientIndex = this.clients.findIndex(c => c.id === clientId);
                             if (clientIndex !== -1) {
                                 this.clients[clientIndex] = { ...this.clients[clientIndex], ...data[0] };
@@ -1701,14 +2008,11 @@
                             this.showNotification("Dados do cliente atualizados com sucesso!", 3000);
                             this.closeModal('edit-client-modal');
                             
-                            // Atualiza as visualizações relevantes
                             this.updateInactiveClientsPanel();
                             this.displayAllClients();
-                            // Se o cliente editado era o currentClient, atualiza a exibição dele
                             if (this.currentClient && this.currentClient.id === clientId) {
-                                this.displayClientDetails(this.clients[clientIndex]);
+                                this.displayClientDetails(this.clients[clientIndex]); 
                             }
-                            // Re-executa a busca eficiente se um termo estiver ativo para atualizar a lista
                             const currentSearchTerm = document.getElementById('efficient-search-term-tab').value;
                             if (currentSearchTerm.trim().length >= 2) {
                                 this.searchEfficientlyTab();
@@ -1720,8 +2024,64 @@
                     } catch (error) {
                         console.error('Erro ao salvar alterações do cliente:', error);
                         this.showNotification(`Erro ao salvar alterações: ${error.message}`, 0);
+                    } 
+                },
+
+                openDeleteClientConfirmModal(clientId, clientName) {
+                    document.getElementById('delete-client-confirm-message').textContent = `Tem certeza que deseja apagar o cliente "${clientName}"? Esta ação não pode ser desfeita. Se o cliente tiver pedidos, ele não será apagado.`;
+                    document.getElementById('delete-client-confirm-id').value = clientId;
+                    const confirmButton = document.getElementById('confirm-delete-action-button');
+                    confirmButton.textContent = "Apagar Cliente"; 
+                    confirmButton.onclick = () => this.confirmDeleteClient(); 
+                    document.getElementById('delete-client-confirm-modal').style.display = 'block';
+                },
+
+                async confirmDeleteClient() {
+                    const clientId = document.getElementById('delete-client-confirm-id').value;
+                    if (!clientId) return;
+
+                    this.showNotification("Verificando pedidos do cliente...", 0);
+                    try {
+                        const { data: orders, error: ordersError, count } = await this.db
+                            .from('pedidos')
+                            .select('id', { count: 'exact' }) 
+                            .eq('client_id', clientId)
+                            .limit(1); 
+
+                        if (ordersError) throw ordersError;
+
+                        if (count && count > 0) { 
+                            this.closeModal('notification-modal');
+                            this.showNotification("Este cliente possui pedidos registrados e não pode ser apagado. Apague os pedidos primeiro na aba 'Relatórios'.", 0);
+                            this.closeModal('delete-client-confirm-modal');
+                            return;
+                        }
+
+                        this.showNotification("Apagando cliente...", 0);
+                        const { error: deleteClientError } = await this.db
+                            .from('clientes')
+                            .delete()
+                            .eq('id', clientId);
+
+                        if (deleteClientError) throw deleteClientError;
+
+                        this.clients = this.clients.filter(c => c.id !== clientId);
+                        if (this.currentClient && this.currentClient.id === clientId) {
+                            this.clearClientAndOrderDetails();
+                        }
+                        
+                        this.showNotification("Cliente apagado com sucesso!", 3000);
+                        this.updateInactiveClientsPanel();
+                        this.displayAllClients();
+                        this.searchEfficientlyTab(); 
+                        await this.loadOverallLastOrders();
+
+
+                    } catch (error) {
+                        console.error("Erro ao apagar cliente:", error);
+                        this.showNotification(`Erro ao apagar cliente: ${error.message}`, 0);
                     } finally {
-                        this.closeModal('notification-modal'); // Fecha a notificação de "salvando..."
+                        this.closeModal('delete-client-confirm-modal');
                     }
                 },
 
@@ -1758,7 +2118,141 @@
                         const formattedDate = createdAtDate ? `${createdAtDate.toLocaleDateString('pt-BR')} ${createdAtDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'})}` : 'N/A';
                         row.innerHTML = `<td>${formattedDate}</td><td>${client.name}</td><td>${client.address || 'N/A'}</td><td>${this.formatPhone(client.phone)}</td>`;
                     });
+                },
+
+                // Funções para editar pedido
+                openEditOrderModal(orderId) {
+                    console.log("[DEBUG] openEditOrderModal chamada com orderId:", orderId);
+                    const order = this.detailedOrdersData.find(o => String(o.id) === String(orderId)) || 
+                                  (this.currentClient && this.currentClient.orders ? this.currentClient.orders.find(o => String(o.id) === String(orderId)) : null);
+
+                    if (!order) {
+                        this.showNotification("Pedido não encontrado para edição.", 0);
+                        console.error("[DEBUG] Pedido não encontrado em openEditOrderModal para orderId:", orderId);
+                        return;
+                    }
+
+                    this.editingOrder.id = order.id;
+                    this.editingOrder.clientId = order.client_id || (order.cliente ? order.cliente.id : null);
+                    this.editingOrder.clientName = order.cliente ? order.cliente.name : 'N/A';
+                    this.editingOrder.clientAddress = order.cliente ? (order.cliente.address || 'N/A') : 'N/A';
+                    this.editingOrder.items = JSON.parse(JSON.stringify(order.items || [])); // Deep copy
+                    this.editingOrder.paymentMethod = order.paymentMethod || '';
+
+                    document.getElementById('edit-order-id').value = this.editingOrder.id;
+                    document.getElementById('edit-order-client-name').textContent = this.editingOrder.clientName;
+                    document.getElementById('edit-order-client-address').textContent = this.editingOrder.clientAddress;
+                    document.getElementById('edit-order-payment-method').value = this.editingOrder.paymentMethod;
+
+                    this.renderEditOrderItems();
+                    this.updateEditOrderTotal();
+                    document.getElementById('edit-order-modal').style.display = 'block';
+                },
+
+                renderEditOrderItems() {
+                    const container = document.getElementById('edit-order-items-container');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (this.editingOrder.items.length === 0) {
+                         container.innerHTML = '<p class="text-sm text-gray-500">Nenhum item neste pedido. Adicione um.</p>';
+                    }
+                    this.editingOrder.items.forEach((item, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'flex space-x-2 items-center p-2 border rounded-md bg-gray-50';
+                        itemDiv.innerHTML = `
+                            <select onchange="app.updateEditOrderItem(${index}, this.value, null)" class="form-input flex-grow">
+                                <option value="">Selecione Marca</option>
+                                ${this.products.map(p => `<option value="${p.name}" ${item.brand === p.name ? 'selected' : ''}>${p.name} - R$ ${p.price.toFixed(2)}</option>`).join('')}
+                            </select>
+                            <input type="number" min="1" value="${item.quantity}" onchange="app.updateEditOrderItem(${index}, null, parseInt(this.value))" class="form-input w-20 text-center" placeholder="Qtd">
+                            <button onclick="app.removeEditOrderItem(${index})" class="btn btn-danger btn-sm p-1.5">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" /></svg>
+                            </button>`;
+                        container.appendChild(itemDiv);
+                    });
+                },
+
+                addEditOrderItem() {
+                    this.editingOrder.items.push({ brand: "", quantity: 1, price: 0 });
+                    this.renderEditOrderItems();
+                    this.updateEditOrderTotal();
+                },
+
+                removeEditOrderItem(index) {
+                    this.editingOrder.items.splice(index, 1);
+                    this.renderEditOrderItems();
+                    this.updateEditOrderTotal();
+                },
+
+                updateEditOrderItem(index, brand, quantity) {
+                    if (brand !== null) {
+                        const product = this.products.find(p => p.name === brand);
+                        this.editingOrder.items[index].brand = brand;
+                        this.editingOrder.items[index].price = product ? product.price : 0;
+                    }
+                    if (quantity !== null) this.editingOrder.items[index].quantity = Math.max(1, quantity);
+                    this.updateEditOrderTotal();
+                },
+
+                updateEditOrderTotal() {
+                    const total = this.editingOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
+                    this.editingOrder.total = total;
+                    document.getElementById('edit-order-total').textContent = total.toFixed(2);
+                },
+
+                async saveOrderEdits() {
+                    if (!this.db) return this.showNotification("Erro: Conexão não estabelecida.", 0);
+                    
+                    const orderId = document.getElementById('edit-order-id').value;
+                    const paymentMethod = document.getElementById('edit-order-payment-method').value;
+                    const validItems = this.editingOrder.items.filter(item => item.brand && item.quantity > 0);
+
+                    if (validItems.length === 0) return this.showNotification("O pedido deve ter pelo menos um item válido.");
+                    if (!paymentMethod) return this.showNotification("Selecione a forma de pagamento.");
+
+                    const newTotal = validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+                    const orderDataToUpdate = {
+                        items: validItems,
+                        total: newTotal,
+                        paymentMethod: paymentMethod,
+                        // Manter a 'date' original, apenas 'order_timestamp' pode ser atualizado se quisermos refletir a hora da edição
+                        // Para simplificar, vamos manter 'order_timestamp' como o original do pedido.
+                        // Se precisar atualizar o timestamp da edição: order_timestamp: new Date().toISOString() 
+                    };
+
+                    this.showNotification("Salvando alterações do pedido...", 0);
+                    try {
+                        const { data, error } = await this.db
+                            .from('pedidos')
+                            .update(orderDataToUpdate)
+                            .eq('id', orderId)
+                            .select('*, cliente:clientes(id, name, address)'); // Seleciona para obter dados atualizados
+
+                        if (error) throw error;
+
+                        if (data && data.length > 0) {
+                            this.showNotification("Pedido atualizado com sucesso!", 3000);
+                            this.closeModal('edit-order-modal');
+                            
+                            // Atualizar dados locais e UIs
+                            await this.loadClients(); // Recarrega tudo para garantir consistência
+                            await this.loadOverallLastOrders();
+                            this.generateSalesReport(); 
+                            this.updateInactiveClientsPanel();
+                            if (this.currentClient && this.currentClient.id === data[0].client_id) {
+                                this.displayClientDetails(this.clients.find(c => c.id === data[0].client_id));
+                            }
+                        } else {
+                            throw new Error("Nenhum dado retornado após a atualização do pedido.");
+                        }
+
+                    } catch (error) {
+                        console.error('Erro ao salvar alterações do pedido:', error);
+                        this.showNotification(`Erro ao salvar pedido: ${error.message}`, 0);
+                    }
                 }
+
             }; 
             window.app.init();
         }); 
