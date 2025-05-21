@@ -203,7 +203,7 @@
             content: ' ▼';
             font-size: 0.7em;
         }
-        #efficient-search-results-tab .result-item {
+        #efficient-search-results-tab .result-item, #quick-search-results .result-item { 
             padding: 0.75rem; 
             border-bottom: 1px solid #e5e7eb; 
             cursor: default; 
@@ -214,10 +214,10 @@
             justify-content: space-between; 
             align-items: center; 
         }
-        #efficient-search-results-tab .result-item:hover {
+        #efficient-search-results-tab .result-item:hover, #quick-search-results .result-item:hover {
             background-color: #e0f2fe; 
         }
-        #efficient-search-results-tab .result-item:last-child {
+        #efficient-search-results-tab .result-item:last-child, #quick-search-results .result-item:last-child {
             border-bottom: none;
         }
         .action-btn-group button {
@@ -294,8 +294,20 @@
                                 Localizador
                             </button>
                         </div>
-                        <div id="new-client-button-container" class="mt-4 hidden">
-                             <button onclick="app.showNewClientFormFromButton()" class="btn btn-warning w-full">
+                    </div>
+
+                    <div class="card">
+                        <h2 class="text-xl font-semibold text-sky-700 mb-4">Verificar Cliente (Nome/Endereço/Telefone)</h2>
+                        <div class="flex space-x-2 items-center">
+                            <input type="text" id="quick-search-term" class="form-input flex-grow" placeholder="Digite nome, endereço, apto, telefone...">
+                            <button onclick="app.quickSearchClient()" class="btn btn-primary">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                                Verificar
+                            </button>
+                        </div>
+                        <div id="quick-search-results" class="mt-4 space-y-1 max-h-48 overflow-y-auto">
+                            </div>
+                        <div id="new-client-button-container" class="mt-4 hidden"> <button onclick="app.showNewClientFormFromButton()" class="btn btn-warning w-full">
                                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>
                                 Cadastrar Novo Cliente
                             </button>
@@ -503,8 +515,8 @@
                             <tr>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Pedido</th>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
-                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itens</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd Total</th>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagamento</th>
                                 <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th> </tr>
@@ -778,11 +790,18 @@
                         efficientSearchResultsContainer.addEventListener('click', (event) => {
                             const targetButton = event.target.closest('button');
                             if (!targetButton) return;
-                            
-                            const clientDiv = event.target.closest('.result-item');
+                             const clientDiv = event.target.closest('.result-item'); // Encontra o .result-item pai
                             if (!clientDiv) return;
-                            // A lógica de clique no nome já está no innerHTML do item.
-                            // Os botões de editar/apagar dentro do item já têm seus próprios onclicks diretos.
+
+                            const clientId = clientDiv.querySelector('p[onclick^="app.handleEfficientSearchClientClick"]')?.onclick.toString().match(/'([^']+)'/)[1];
+                            
+                            if (targetButton.classList.contains('edit-client-btn')) {
+                                if (clientId) window.app.openEditClientModal(clientId);
+                            } else if (targetButton.classList.contains('delete-client-btn')) {
+                                const clientNameElement = clientDiv.querySelector('p.font-semibold');
+                                const clientName = clientNameElement ? clientNameElement.textContent : 'Cliente Desconhecido';
+                                if (clientId) window.app.openDeleteClientConfirmModal(clientId, clientName.replace(/'/g, "\\'"));
+                            }
                         });
                     }
                 },
@@ -1033,6 +1052,10 @@
                     document.getElementById('last-orders-list').innerHTML = '<p class="text-gray-500">Nenhum pedido anterior para este cliente.</p>'; 
                     document.getElementById('payment-method').value = ''; 
                     this.currentClient = null; this.currentOrder = []; this.renderOrderItems();
+                    // Limpa também os resultados da busca rápida
+                    const quickSearchResultsContainer = document.getElementById('quick-search-results');
+                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = '';
+
                 },
 
                 async searchClientByPhone(showNotFoundNotification = true) { 
@@ -1042,6 +1065,9 @@
                     const phone = phoneInput.value.replace(/\D/g, ''); 
 
                     const newClientBtnContainer = document.getElementById('new-client-button-container');
+                    const quickSearchResultsContainer = document.getElementById('quick-search-results');
+                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = ''; // Limpa resultados da busca rápida
+
                     if (!phone && showNotFoundNotification) return this.showNotification("Digite um telefone.");
                     
                     if (showNotFoundNotification) this.showNotification("Buscando cliente...", 0); 
@@ -1067,18 +1093,14 @@
                             if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                             document.getElementById('new-client-form-section').classList.add('hidden');
                         } else {
-                            if (showNotFoundNotification) { 
-                                this.clearClientAndOrderDetails(); 
-                                if (phone.length >= 10) { 
-                                    if(newClientBtnContainer) newClientBtnContainer.classList.remove('hidden');
-                                    this.showNotification("Cliente não encontrado.");
-                                } else {
-                                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
-                                }
-                            } else if (phone.length >=10 && !foundClient) { 
+                            // Apenas limpa os detalhes se a busca foi explícita (não debounce)
+                            if (showNotFoundNotification) this.clearClientAndOrderDetails(); 
+                            
+                            if (phone.length >= 10) { 
                                 if(newClientBtnContainer) newClientBtnContainer.classList.remove('hidden');
-                            } else { 
-                                 if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                                if (showNotFoundNotification) this.showNotification("Cliente não encontrado.");
+                            } else {
+                                if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                             }
                         }
                     } catch (error) {
@@ -1098,18 +1120,35 @@
                     document.getElementById('simple-whatsapp-container').classList.remove('hidden');
                     document.getElementById('new-client-form-section').classList.add('hidden');
                     document.getElementById('new-client-button-container').classList.add('hidden');
+                    // Limpa resultados da busca rápida ao selecionar um cliente
+                    const quickSearchResultsContainer = document.getElementById('quick-search-results');
+                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = '';
+                    document.getElementById('quick-search-term').value = ''; // Limpa o campo da busca rápida
+
+
                     this.resetOrderForm(); this.updateLastOrdersSummary(); this.generateSimpleWhatsAppMessage(); 
                 },
                 
                 showNewClientFormFromButton() {
                     const phoneFromSearch = document.getElementById('search-phone').value;
+                    const nameFromQuickSearch = document.getElementById('quick-search-term').value; // Pega o termo da busca rápida
+
                     document.getElementById('new-client-phone').value = phoneFromSearch; 
                     this.applyPhoneMask(document.getElementById('new-client-phone'));
-                    document.getElementById('new-client-name').value = '';
+                    
+                    // Se o termo da busca rápida não for um número, assume que é um nome
+                    if (nameFromQuickSearch && isNaN(nameFromQuickSearch.replace(/\D/g, ''))) {
+                        document.getElementById('new-client-name').value = this.capitalizeWords(nameFromQuickSearch);
+                    } else {
+                        document.getElementById('new-client-name').value = '';
+                    }
                     document.getElementById('new-client-address').value = '';
+
                     document.getElementById('new-client-form-section').classList.remove('hidden');
                     document.getElementById('new-client-button-container').classList.add('hidden');
                     document.getElementById('client-and-order-section').classList.add('hidden'); 
+                    const quickSearchResultsContainer = document.getElementById('quick-search-results');
+                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = ''; // Limpa resultados da busca rápida
                 },
 
                 async saveNewClientAndProceedToOrder() {
@@ -1577,7 +1616,6 @@
                                     const orderDateTime = order.order_timestamp ? new Date(order.order_timestamp) : new Date(order.date + "T00:00:00Z");
                                     const formattedDateTime = orderDateTime.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-                                    // Cria uma linha para cada pedido, não para cada item
                                     const row = detailedReportTbody.insertRow();
                                     const itemsSummary = order.items.map(item => `${item.quantity}x ${item.brand}`).join(', ');
                                     
@@ -2119,12 +2157,12 @@
                         row.innerHTML = `<td>${formattedDate}</td><td>${client.name}</td><td>${client.address || 'N/A'}</td><td>${this.formatPhone(client.phone)}</td>`;
                     });
                 },
-
-                // Funções para editar pedido
+                
                 openEditOrderModal(orderId) {
                     console.log("[DEBUG] openEditOrderModal chamada com orderId:", orderId);
                     const order = this.detailedOrdersData.find(o => String(o.id) === String(orderId)) || 
-                                  (this.currentClient && this.currentClient.orders ? this.currentClient.orders.find(o => String(o.id) === String(orderId)) : null);
+                                (this.currentClient && this.currentClient.orders ? this.currentClient.orders.find(o => String(o.id) === String(orderId)) : null) ||
+                                this.clients.flatMap(c => c.orders).find(o => String(o.id) === String(orderId)); 
 
                     if (!order) {
                         this.showNotification("Pedido não encontrado para edição.", 0);
@@ -2132,11 +2170,13 @@
                         return;
                     }
 
+                    const clientForOrder = this.clients.find(c => c.id === order.client_id);
+
                     this.editingOrder.id = order.id;
-                    this.editingOrder.clientId = order.client_id || (order.cliente ? order.cliente.id : null);
-                    this.editingOrder.clientName = order.cliente ? order.cliente.name : 'N/A';
-                    this.editingOrder.clientAddress = order.cliente ? (order.cliente.address || 'N/A') : 'N/A';
-                    this.editingOrder.items = JSON.parse(JSON.stringify(order.items || [])); // Deep copy
+                    this.editingOrder.clientId = order.client_id;
+                    this.editingOrder.clientName = clientForOrder ? clientForOrder.name : (order.cliente ? order.cliente.name : 'N/A');
+                    this.editingOrder.clientAddress = clientForOrder ? clientForOrder.address : (order.cliente ? order.cliente.address : 'N/A');
+                    this.editingOrder.items = JSON.parse(JSON.stringify(order.items || [])); 
                     this.editingOrder.paymentMethod = order.paymentMethod || '';
 
                     document.getElementById('edit-order-id').value = this.editingOrder.id;
@@ -2216,9 +2256,6 @@
                         items: validItems,
                         total: newTotal,
                         paymentMethod: paymentMethod,
-                        // Manter a 'date' original, apenas 'order_timestamp' pode ser atualizado se quisermos refletir a hora da edição
-                        // Para simplificar, vamos manter 'order_timestamp' como o original do pedido.
-                        // Se precisar atualizar o timestamp da edição: order_timestamp: new Date().toISOString() 
                     };
 
                     this.showNotification("Salvando alterações do pedido...", 0);
@@ -2227,7 +2264,7 @@
                             .from('pedidos')
                             .update(orderDataToUpdate)
                             .eq('id', orderId)
-                            .select('*, cliente:clientes(id, name, address)'); // Seleciona para obter dados atualizados
+                            .select('*, cliente:clientes(id, name, address)');
 
                         if (error) throw error;
 
@@ -2235,8 +2272,7 @@
                             this.showNotification("Pedido atualizado com sucesso!", 3000);
                             this.closeModal('edit-order-modal');
                             
-                            // Atualizar dados locais e UIs
-                            await this.loadClients(); // Recarrega tudo para garantir consistência
+                            await this.loadClients(); 
                             await this.loadOverallLastOrders();
                             this.generateSalesReport(); 
                             this.updateInactiveClientsPanel();
@@ -2251,7 +2287,74 @@
                         console.error('Erro ao salvar alterações do pedido:', error);
                         this.showNotification(`Erro ao salvar pedido: ${error.message}`, 0);
                     }
+                },
+                // Funções para busca rápida na aba Clientes e Pedidos
+                quickSearchClient() {
+                    const searchTermInput = document.getElementById('quick-search-term');
+                    if (!searchTermInput) return;
+                    const searchTerm = searchTermInput.value.toLowerCase().trim();
+                    const resultsContainer = document.getElementById('quick-search-results');
+                    const newClientBtnContainer = document.getElementById('new-client-button-container');
+
+                    if (!resultsContainer) return;
+                    resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Buscando...</p>';
+                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden'); // Esconde o botão de novo cliente inicialmente
+
+                    if (searchTerm.length < 2) {
+                        resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Digite ao menos 2 caracteres.</p>';
+                        return;
+                    }
+
+                    const foundClients = this.clients.filter(client => {
+                        const term = searchTerm;
+                        const nameMatch = client.name && typeof client.name === 'string' && client.name.toLowerCase().includes(term);
+                        const addressMatch = client.address && typeof client.address === 'string' && client.address.toLowerCase().includes(term);
+                        let phoneMatch = false;
+                        if (/\d/.test(term)) {
+                            const searchPhoneDigits = term.replace(/\D/g, '');
+                            if (searchPhoneDigits.length > 0) {
+                                const clientPhoneString = client.phone ? String(client.phone) : "";
+                                const clientPhoneDigits = clientPhoneString.replace(/\D/g, '');
+                                if (clientPhoneDigits && clientPhoneDigits.includes(searchPhoneDigits)) {
+                                    phoneMatch = true;
+                                }
+                            }
+                        }
+                        return nameMatch || addressMatch || phoneMatch;
+                    });
+                    this.displayQuickSearchResults(foundClients);
+                },
+
+                displayQuickSearchResults(foundClients) {
+                    const resultsContainer = document.getElementById('quick-search-results');
+                    const newClientBtnContainer = document.getElementById('new-client-button-container');
+                    if (!resultsContainer) return;
+                    resultsContainer.innerHTML = '';
+
+                    if (foundClients.length === 0) {
+                        resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum cliente encontrado com o termo informado.</p>';
+                        if(newClientBtnContainer) newClientBtnContainer.classList.remove('hidden');
+                    } else {
+                        if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                        foundClients.forEach(client => {
+                            const div = document.createElement('div');
+                            div.className = 'result-item p-2 border-b hover:bg-sky-50 cursor-pointer rounded'; // Estilo simplificado
+                            div.innerHTML = `
+                                <p class="font-semibold text-sky-700">${client.name}</p>
+                                <p class="text-sm text-gray-600">${client.address || 'Endereço não informado'}</p>
+                                <p class="text-sm text-gray-500">${this.formatPhone(client.phone)}</p>
+                            `;
+                            div.onclick = () => {
+                                this.displayClientDetails(client);
+                                resultsContainer.innerHTML = ''; // Limpa os resultados da busca rápida
+                                document.getElementById('quick-search-term').value = ''; // Limpa o campo de busca rápida
+                                if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
+                            };
+                            resultsContainer.appendChild(div);
+                        });
+                    }
                 }
+
 
             }; 
             window.app.init();
