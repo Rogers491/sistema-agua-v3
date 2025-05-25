@@ -261,22 +261,22 @@
         <div class="mb-6 border-b border-gray-200">
             <nav class="-mb-px flex space-x-1 md:space-x-4 overflow-x-auto pb-1" aria-label="Tabs">
                 <button onclick="app.changeTab('clientes')" class="tab-button active whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
-                    Clientes e Pedidos
+                    🏠 Clientes & Pedidos
                 </button>
                 <button onclick="app.changeTab('busca_eficiente')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
-                    Busca Eficiente
+                    🔍 Busca Eficiente
                 </button>
                 <button onclick="app.changeTab('todos_clientes')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
-                    Todos os Clientes
+                    👥 Todos Clientes
                 </button>
                 <button onclick="app.changeTab('importar')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
-                    Importar Clientes
+                    📊 Importar Clientes
                 </button>
                 <button onclick="app.changeTab('inativos')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
-                    Painel de Inativos
+                    ⚠️ Painel de Inativos
                 </button>
                 <button onclick="app.changeTab('relatorios')" class="tab-button whitespace-nowrap py-3 px-3 md:px-4 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-sky-700 hover:border-sky-300 rounded-t-md">
-                    Relatórios
+                    📈 Relatórios
                 </button>
             </nav>
         </div>
@@ -285,7 +285,7 @@
             <section id="clientes-tab" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-2 space-y-6">
                     <div class="card">
-                        <h2 class="text-xl font-semibold text-sky-700 mb-4">Buscar Cliente (Telefone)</h2>
+                        <h2 class="text-xl font-semibold text-sky-700 mb-4">📞 Buscar Cliente (Telefone)</h2>
                         <label for="search-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone (busca automática):</label>
                         <div class="flex space-x-2 items-center">
                             <input type="tel" id="search-phone" class="form-input flex-grow" placeholder="(XX) XXXXX-XXXX">
@@ -297,7 +297,7 @@
                     </div>
 
                     <div class="card">
-                        <h2 class="text-xl font-semibold text-sky-700 mb-4">Verificar Cliente (Nome/Endereço/Telefone)</h2>
+                        <h2 class="text-xl font-semibold text-sky-700 mb-4">✅ Verificar Cliente (Nome/Endereço/Telefone)</h2>
                         <div class="flex space-x-2 items-center">
                             <input type="text" id="quick-search-term" class="form-input flex-grow" placeholder="Digite nome, endereço, apto, telefone...">
                             <button onclick="app.quickSearchClient()" class="btn btn-primary">
@@ -316,14 +316,14 @@
                     
                     <div id="client-and-order-section" class="hidden space-y-6">
                         <div class="card">
-                            <h3 class="text-xl font-semibold text-sky-700 mb-3">Dados do Cliente</h3>
+                            <h3 class="text-xl font-semibold text-sky-700 mb-3">👤 Dados do Cliente</h3>
                             <p><strong>Nome:</strong> <span id="client-name-display" class="text-gray-800"></span></p>
                             <p><strong>Endereço:</strong> <span id="client-address-display" class="text-gray-800"></span></p>
                             <p><strong>Telefone:</strong> <span id="client-phone-display" class="text-gray-800"></span></p>
                             <input type="hidden" id="current-client-id">
 
                             <div id="last-orders-summary" class="mt-4 pt-3 border-t border-gray-200">
-                                <h4 class="text-md font-semibold text-gray-600 mb-2">Últimos Pedidos (deste cliente):</h4>
+                                <h4 class="text-md font-semibold text-gray-600 mb-2">🧾 Últimos Pedidos (deste cliente):</h4>
                                 <div id="last-orders-list" class="text-sm text-gray-700 space-y-1">
                                     <p class="text-gray-500">Nenhum pedido anterior registrado para este cliente.</p>
                                 </div>
@@ -331,7 +331,7 @@
                         </div>
 
                         <div class="card">
-                            <h3 class="text-xl font-semibold text-sky-700 mb-3">Novo Pedido</h3>
+                            <h3 class="text-xl font-semibold text-sky-700 mb-3">🛒 Novo Pedido</h3>
                             <div id="order-items-container" class="space-y-3">
                                 </div>
                             <button onclick="app.addOrderItem()" class="btn btn-secondary mt-3 text-sm">
@@ -340,7 +340,7 @@
                             </button>
                             
                             <div class="mt-4">
-                                <label for="payment-method" class="block text-sm font-medium text-gray-700">Forma de Pagamento:</label>
+                                <label for="payment-method" class="block text-sm font-medium text-gray-700">💳 Forma de Pagamento:</label>
                                 <div class="flex items-center space-x-2 mt-1">
                                     <select id="payment-method" class="form-input flex-grow" onchange="app.generateSimpleWhatsAppMessage()">
                                         <option value="">Selecione...</option>
@@ -357,7 +357,7 @@
                             </div>
 
                             <div class="mt-4 pt-3 border-t border-gray-200">
-                                <p class="text-lg font-semibold text-gray-800">Total do Pedido: R$ <span id="order-total" class="text-emerald-600">0.00</span></p>
+                                <p class="text-lg font-semibold text-gray-800">💰 Total do Pedido: R$ <span id="order-total" class="text-emerald-600">0.00</span></p>
                             </div>
 
                             <div class="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -375,14 +375,14 @@
                     </div>
 
                      <div id="overall-last-orders-section" class="card">
-                        <h2 class="text-xl font-semibold text-sky-700 mb-3">Últimos Pedidos Registrados</h2>
+                        <h2 class="text-xl font-semibold text-sky-700 mb-3">🕒 Últimos Pedidos Registrados</h2>
                         <div id="overall-last-orders-list" class="text-sm text-gray-700 space-y-2 max-h-96 overflow-y-auto">
                             <p class="text-gray-500">Carregando últimos pedidos...</p>
                         </div>
                     </div>
 
                     <div id="new-client-form-section" class="card hidden">
-                        <h3 class="text-xl font-semibold text-amber-700 mb-3">Cadastrar Novo Cliente</h3>
+                        <h3 class="text-xl font-semibold text-amber-700 mb-3">➕ Cadastrar Novo Cliente</h3>
                         <div>
                             <label for="new-client-name" class="block text-sm font-medium text-gray-700">Nome:</label>
                             <input type="text" id="new-client-name" class="form-input">
@@ -404,7 +404,7 @@
 
                 <div class="md:col-span-1">
                     <div id="simple-whatsapp-container" class="card hidden">
-                        <h3 class="text-lg font-semibold text-sky-700 mb-2">Mensagem Rápida (WhatsApp)</h3>
+                        <h3 class="text-lg font-semibold text-sky-700 mb-2">📱 Mensagem Rápida (WhatsApp)</h3>
                         <textarea id="whatsapp-message-simple" rows="5" class="form-input" readonly placeholder="Detalhes para cópia rápida..."></textarea>
                         <button onclick="app.copySimpleWhatsAppMessage()" class="btn btn-primary mt-2 w-full text-sm">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 4.625v2.625m0 0H19.5m-2.25-2.625h-1.5m1.5 0l-1.5-1.5m1.5 1.5l1.5 1.5" /></svg>
@@ -415,7 +415,7 @@
             </section>
 
             <section id="busca_eficiente-tab" class="hidden card">
-                <h2 class="text-xl font-semibold text-sky-700 mb-4">Busca Eficiente de Clientes</h2>
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">🔍 Busca Eficiente de Clientes</h2>
                 <div class="flex space-x-2 items-center mb-4">
                     <input type="text" id="efficient-search-term-tab" class="form-input flex-grow" placeholder="Digite nome, endereço, apto, telefone...">
                     <button onclick="app.searchEfficientlyTab()" class="btn btn-primary">
@@ -430,7 +430,7 @@
 
 
             <section id="todos_clientes-tab" class="hidden card">
-                <h2 class="text-xl font-semibold text-sky-700 mb-4">Todos os Clientes Cadastrados</h2>
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">👥 Todos os Clientes Cadastrados</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -448,7 +448,7 @@
             </section>
 
             <section id="importar-tab" class="hidden card">
-                <h2 class="text-xl font-semibold text-sky-700 mb-4">Importar Clientes via Excel</h2>
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">📊 Importar Clientes via Excel</h2>
                 <p class="text-sm text-gray-600 mb-1">Selecione um arquivo Excel (.xlsx ou .xls).</p>
                 <p class="text-xs text-gray-500 mb-3">Colunas esperadas: <strong>Name</strong> (Nome + Endereço) e <strong>Mobile Phone</strong> (Telefone).</p>
                 <input type="file" id="excel-file-input" accept=".xlsx,.xls" class="form-input file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
@@ -460,7 +460,7 @@
             </section>
 
             <section id="inativos-tab" class="hidden card">
-                <h2 class="text-xl font-semibold text-sky-700 mb-4">Painel de Clientes Inativos</h2>
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">⚠️ Painel de Clientes Inativos</h2>
                  <div class="mb-4"> <button onclick="app.exportInactiveClientsToExcel()" class="btn btn-success">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                         Exportar Inativos para Excel
@@ -486,7 +486,7 @@
             </section>
 
             <section id="relatorios-tab" class="hidden card">
-                <h2 class="text-xl font-semibold text-sky-700 mb-4">Relatório de Vendas</h2>
+                <h2 class="text-xl font-semibold text-sky-700 mb-4">📈 Relatório de Vendas</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-4">
                     <div>
                         <label for="report-start-date" class="block text-sm font-medium text-gray-700">Data Início:</label>
@@ -508,7 +508,7 @@
                     <canvas id="sales-chart" height="150"></canvas>
                 </div>
                 
-                <h3 class="text-lg font-semibold text-sky-700 my-4">Detalhes dos Pedidos</h3>
+                <h3 class="text-lg font-semibold text-sky-700 my-4">🧾 Detalhes dos Pedidos</h3>
                 <div class="overflow-x-auto mb-4">
                     <table id="detailed-sales-report-table" class="min-w-full divide-y divide-gray-200 shadow rounded-lg">
                         <thead class="bg-gray-50">
@@ -544,7 +544,7 @@
         <div id="locator-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button" onclick="app.closeModal('locator-modal')">&times;</span>
-                <h3 class="text-xl font-semibold text-sky-700 mb-4">Localizador de Clientes</h3>
+                <h3 class="text-xl font-semibold text-sky-700 mb-4">📍 Localizador de Clientes</h3>
                 <input type="text" id="locator-search-term" class="form-input mb-3" placeholder="Buscar por nome, endereço ou telefone...">
                 <button onclick="app.searchClientsUniversal()" class="btn btn-primary w-full mb-4">
                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
@@ -559,7 +559,7 @@
         <div id="inactive-client-observation-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button" onclick="app.closeModal('inactive-client-observation-modal')">&times;</span>
-                <h3 class="text-xl font-semibold text-sky-700 mb-4">Observações do Cliente Inativo</h3>
+                <h3 class="text-xl font-semibold text-sky-700 mb-4">📝 Observações do Cliente Inativo</h3>
                 <input type="hidden" id="inactive-client-id-obs">
                 <div class="mb-3">
                     <p><strong>Nome:</strong> <span id="inactive-client-name-obs" class="text-gray-700"></span></p>
@@ -580,7 +580,7 @@
         <div id="edit-client-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button" onclick="app.closeModal('edit-client-modal')">&times;</span>
-                <h3 class="text-xl font-semibold text-sky-700 mb-4">Editar Dados do Cliente</h3>
+                <h3 class="text-xl font-semibold text-sky-700 mb-4">✏️ Editar Dados do Cliente</h3>
                 <input type="hidden" id="edit-client-id">
                 <div class="mb-3">
                     <label for="edit-client-name" class="block text-sm font-medium text-gray-700">Nome:</label>
@@ -603,7 +603,7 @@
         
         <div id="delete-client-confirm-modal" class="modal">
             <div class="modal-content">
-                <h3 class="text-xl font-semibold text-red-600 mb-4">Confirmar Exclusão</h3>
+                <h3 class="text-xl font-semibold text-red-600 mb-4">🗑️ Confirmar Exclusão</h3>
                 <p id="delete-client-confirm-message" class="text-gray-700 mb-6"></p>
                 <input type="hidden" id="delete-client-confirm-id">
                 <div class="flex justify-end space-x-2">
@@ -615,7 +615,7 @@
         <div id="edit-order-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button" onclick="app.closeModal('edit-order-modal')">&times;</span>
-                <h3 class="text-xl font-semibold text-sky-700 mb-2">Editar Pedido</h3>
+                <h3 class="text-xl font-semibold text-sky-700 mb-2">✏️ Editar Pedido</h3>
                 <input type="hidden" id="edit-order-id">
                 <div class="mb-3 text-sm">
                     <p><strong>Cliente:</strong> <span id="edit-order-client-name" class="text-gray-700"></span></p>
@@ -629,7 +629,7 @@
                 </button>
                 
                 <div class="mb-3">
-                    <label for="edit-order-payment-method" class="block text-sm font-medium text-gray-700">Forma de Pagamento:</label>
+                    <label for="edit-order-payment-method" class="block text-sm font-medium text-gray-700">💳 Forma de Pagamento:</label>
                     <select id="edit-order-payment-method" class="form-input mt-1">
                         <option value="">Selecione...</option>
                         <option value="Pix">Pix</option>
@@ -640,7 +640,7 @@
                     </select>
                 </div>
                 <div class="mb-4 pt-3 border-t border-gray-200">
-                    <p class="text-lg font-semibold text-gray-800">Total do Pedido: R$ <span id="edit-order-total" class="text-emerald-600">0.00</span></p>
+                    <p class="text-lg font-semibold text-gray-800">💰 Total do Pedido: R$ <span id="edit-order-total" class="text-emerald-600">0.00</span></p>
                 </div>
                 <div class="flex justify-end space-x-2">
                     <button onclick="app.closeModal('edit-order-modal')" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800">Cancelar</button>
@@ -789,18 +789,20 @@
                     if (efficientSearchResultsContainer) {
                         efficientSearchResultsContainer.addEventListener('click', (event) => {
                             const targetButton = event.target.closest('button');
-                            if (!targetButton) return;
-                             const clientDiv = event.target.closest('.result-item'); // Encontra o .result-item pai
-                            if (!clientDiv) return;
-
-                            const clientId = clientDiv.querySelector('p[onclick^="app.handleEfficientSearchClientClick"]')?.onclick.toString().match(/'([^']+)'/)[1];
+                             const clientDiv = event.target.closest('.result-item'); 
                             
-                            if (targetButton.classList.contains('edit-client-btn')) {
-                                if (clientId) window.app.openEditClientModal(clientId);
-                            } else if (targetButton.classList.contains('delete-client-btn')) {
+                            if (targetButton && clientDiv) { 
                                 const clientNameElement = clientDiv.querySelector('p.font-semibold');
                                 const clientName = clientNameElement ? clientNameElement.textContent : 'Cliente Desconhecido';
-                                if (clientId) window.app.openDeleteClientConfirmModal(clientId, clientName.replace(/'/g, "\\'"));
+                                const clientNameParagraph = clientDiv.querySelector('p[onclick^="app.handleEfficientSearchClientClick"]');
+                                const clientId = clientNameParagraph ? clientNameParagraph.getAttribute('onclick').match(/'([^']+)'/)[1] : null;
+
+
+                                if (targetButton.classList.contains('edit-client-btn')) {
+                                    if (clientId) window.app.openEditClientModal(clientId);
+                                } else if (targetButton.classList.contains('delete-client-btn')) {
+                                    if (clientId) window.app.openDeleteClientConfirmModal(clientId, clientName.replace(/'/g, "\\'"));
+                                }
                             }
                         });
                     }
@@ -1052,7 +1054,6 @@
                     document.getElementById('last-orders-list').innerHTML = '<p class="text-gray-500">Nenhum pedido anterior para este cliente.</p>'; 
                     document.getElementById('payment-method').value = ''; 
                     this.currentClient = null; this.currentOrder = []; this.renderOrderItems();
-                    // Limpa também os resultados da busca rápida
                     const quickSearchResultsContainer = document.getElementById('quick-search-results');
                     if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = '';
 
@@ -1066,7 +1067,7 @@
 
                     const newClientBtnContainer = document.getElementById('new-client-button-container');
                     const quickSearchResultsContainer = document.getElementById('quick-search-results');
-                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = ''; // Limpa resultados da busca rápida
+                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = ''; 
 
                     if (!phone && showNotFoundNotification) return this.showNotification("Digite um telefone.");
                     
@@ -1093,7 +1094,6 @@
                             if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                             document.getElementById('new-client-form-section').classList.add('hidden');
                         } else {
-                            // Apenas limpa os detalhes se a busca foi explícita (não debounce)
                             if (showNotFoundNotification) this.clearClientAndOrderDetails(); 
                             
                             if (phone.length >= 10) { 
@@ -1120,10 +1120,9 @@
                     document.getElementById('simple-whatsapp-container').classList.remove('hidden');
                     document.getElementById('new-client-form-section').classList.add('hidden');
                     document.getElementById('new-client-button-container').classList.add('hidden');
-                    // Limpa resultados da busca rápida ao selecionar um cliente
                     const quickSearchResultsContainer = document.getElementById('quick-search-results');
                     if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = '';
-                    document.getElementById('quick-search-term').value = ''; // Limpa o campo da busca rápida
+                    document.getElementById('quick-search-term').value = ''; 
 
 
                     this.resetOrderForm(); this.updateLastOrdersSummary(); this.generateSimpleWhatsAppMessage(); 
@@ -1131,12 +1130,11 @@
                 
                 showNewClientFormFromButton() {
                     const phoneFromSearch = document.getElementById('search-phone').value;
-                    const nameFromQuickSearch = document.getElementById('quick-search-term').value; // Pega o termo da busca rápida
+                    const nameFromQuickSearch = document.getElementById('quick-search-term').value; 
 
                     document.getElementById('new-client-phone').value = phoneFromSearch; 
                     this.applyPhoneMask(document.getElementById('new-client-phone'));
                     
-                    // Se o termo da busca rápida não for um número, assume que é um nome
                     if (nameFromQuickSearch && isNaN(nameFromQuickSearch.replace(/\D/g, ''))) {
                         document.getElementById('new-client-name').value = this.capitalizeWords(nameFromQuickSearch);
                     } else {
@@ -1148,7 +1146,7 @@
                     document.getElementById('new-client-button-container').classList.add('hidden');
                     document.getElementById('client-and-order-section').classList.add('hidden'); 
                     const quickSearchResultsContainer = document.getElementById('quick-search-results');
-                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = ''; // Limpa resultados da busca rápida
+                    if (quickSearchResultsContainer) quickSearchResultsContainer.innerHTML = ''; 
                 },
 
                 async saveNewClientAndProceedToOrder() {
@@ -1898,30 +1896,42 @@
                         resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Digite ao menos 2 caracteres para buscar.</p>';
                         return;
                     }
+                    console.log("[DEBUG Busca Eficiente] Termo:", searchTerm);
 
                     const foundClients = this.clients.filter(client => {
-                        const term = searchTerm; 
+                        const termLower = searchTerm; 
                         
-                        let nameMatch = false;
-                        if (client.name && typeof client.name === 'string') {
-                            nameMatch = client.name.toLowerCase().includes(term);
-                        }
-                        
-                        let addressMatch = false;
-                        if (client.address && typeof client.address === 'string') {
-                            addressMatch = client.address.toLowerCase().includes(term);
-                        }
+                        const clientName = client.name || ""; 
+                        const clientAddress = client.address || "";
+                        const clientPhone = client.phone || "";
+
+                        const clientNameLower = clientName.toLowerCase();
+                        const clientAddressLower = clientAddress.toLowerCase();
+                        const clientPhoneDigits = clientPhone.replace(/\D/g, '');
+
+                        const nameMatch = clientNameLower.includes(termLower);
+                        const addressMatch = clientAddressLower.includes(termLower);
                         
                         let phoneMatch = false;
-                        if (/\d/.test(term)) { 
-                            const searchPhoneDigits = term.replace(/\D/g, '');
+                        if (/\d/.test(termLower)) { 
+                            const searchPhoneDigits = termLower.replace(/\D/g, '');
                             if (searchPhoneDigits.length > 0) { 
-                                const clientPhoneString = client.phone ? String(client.phone) : "";
-                                const clientPhoneDigits = clientPhoneString.replace(/\D/g, '');
-                                if (clientPhoneDigits && clientPhoneDigits.includes(searchPhoneDigits)) {
-                                    phoneMatch = true;
-                                }
+                                phoneMatch = clientPhoneDigits.includes(searchPhoneDigits);
                             }
+                        }
+                        
+                        if (clientNameLower.includes("alvaro gamma")) { 
+                            console.log(`--- DEBUG Alvaro Gamma (Busca Eficiente) ---`);
+                            console.log(`   Termo Buscado: "${termLower}"`);
+                            console.log(`   Nome Cliente (original): "${client.name}"`);
+                            console.log(`   Nome Cliente (lower): "${clientNameLower}"`);
+                            console.log(`   nameMatch: ${nameMatch}`);
+                            console.log(`   Endereço Cliente (original): "${client.address}"`);
+                            console.log(`   Endereço Cliente (lower): "${clientAddressLower}"`);
+                            console.log(`   addressMatch: ${addressMatch}`);
+                            console.log(`   phoneMatch: ${phoneMatch}`);
+                            console.log(`   Resultado do filtro para Alvaro Gamma: ${nameMatch || addressMatch || phoneMatch}`);
+                            console.log(`-------------------------`);
                         }
                         return nameMatch || addressMatch || phoneMatch;
                     });
@@ -2288,7 +2298,6 @@
                         this.showNotification(`Erro ao salvar pedido: ${error.message}`, 0);
                     }
                 },
-                // Funções para busca rápida na aba Clientes e Pedidos
                 quickSearchClient() {
                     const searchTermInput = document.getElementById('quick-search-term');
                     if (!searchTermInput) return;
@@ -2298,28 +2307,50 @@
 
                     if (!resultsContainer) return;
                     resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Buscando...</p>';
-                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden'); // Esconde o botão de novo cliente inicialmente
+                    if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden'); 
 
                     if (searchTerm.length < 2) {
                         resultsContainer.innerHTML = '<p class="text-gray-500 text-sm">Digite ao menos 2 caracteres.</p>';
                         return;
                     }
+                    console.log("[DEBUG Busca Rápida] Termo:", searchTerm);
 
                     const foundClients = this.clients.filter(client => {
-                        const term = searchTerm;
-                        const nameMatch = client.name && typeof client.name === 'string' && client.name.toLowerCase().includes(term);
-                        const addressMatch = client.address && typeof client.address === 'string' && client.address.toLowerCase().includes(term);
+                        const termLower = searchTerm; 
+                        
+                        const clientName = client.name || ""; 
+                        const clientAddress = client.address || "";
+                        const clientPhone = client.phone || "";
+
+                        const clientNameLower = clientName.toLowerCase();
+                        const clientAddressLower = clientAddress.toLowerCase();
+                        const clientPhoneDigits = clientPhone.replace(/\D/g, '');
+
+                        const nameMatch = clientNameLower.includes(termLower);
+                        const addressMatch = clientAddressLower.includes(termLower);
+                        
                         let phoneMatch = false;
-                        if (/\d/.test(term)) {
-                            const searchPhoneDigits = term.replace(/\D/g, '');
-                            if (searchPhoneDigits.length > 0) {
-                                const clientPhoneString = client.phone ? String(client.phone) : "";
-                                const clientPhoneDigits = clientPhoneString.replace(/\D/g, '');
-                                if (clientPhoneDigits && clientPhoneDigits.includes(searchPhoneDigits)) {
-                                    phoneMatch = true;
-                                }
+                        if (/\d/.test(termLower)) { 
+                            const searchPhoneDigits = termLower.replace(/\D/g, '');
+                            if (searchPhoneDigits.length > 0) { 
+                                phoneMatch = clientPhoneDigits.includes(searchPhoneDigits);
                             }
                         }
+                        
+                        if (clientNameLower.includes("alvaro gamma") || clientAddressLower.includes("casa 26")) { 
+                            console.log(`--- DEBUG Alvaro Gamma (Busca Rápida) ---`);
+                            console.log(`   Termo Buscado: "${termLower}"`);
+                            console.log(`   Nome Cliente (original): "${client.name}"`);
+                            console.log(`   Nome Cliente (lower): "${clientNameLower}"`);
+                            console.log(`   nameMatch: ${nameMatch}`);
+                            console.log(`   Endereço Cliente (original): "${client.address}"`);
+                            console.log(`   Endereço Cliente (lower): "${clientAddressLower}"`);
+                            console.log(`   addressMatch: ${addressMatch}`);
+                            console.log(`   phoneMatch: ${phoneMatch}`);
+                            console.log(`   Resultado do filtro para Alvaro Gamma: ${nameMatch || addressMatch || phoneMatch}`);
+                            console.log(`-------------------------`);
+                        }
+
                         return nameMatch || addressMatch || phoneMatch;
                     });
                     this.displayQuickSearchResults(foundClients);
@@ -2338,7 +2369,7 @@
                         if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                         foundClients.forEach(client => {
                             const div = document.createElement('div');
-                            div.className = 'result-item p-2 border-b hover:bg-sky-50 cursor-pointer rounded'; // Estilo simplificado
+                            div.className = 'result-item p-2 border-b hover:bg-sky-50 cursor-pointer rounded'; 
                             div.innerHTML = `
                                 <p class="font-semibold text-sky-700">${client.name}</p>
                                 <p class="text-sm text-gray-600">${client.address || 'Endereço não informado'}</p>
@@ -2346,8 +2377,8 @@
                             `;
                             div.onclick = () => {
                                 this.displayClientDetails(client);
-                                resultsContainer.innerHTML = ''; // Limpa os resultados da busca rápida
-                                document.getElementById('quick-search-term').value = ''; // Limpa o campo de busca rápida
+                                resultsContainer.innerHTML = ''; 
+                                document.getElementById('quick-search-term').value = ''; 
                                 if(newClientBtnContainer) newClientBtnContainer.classList.add('hidden');
                             };
                             resultsContainer.appendChild(div);
